@@ -183,6 +183,9 @@ category_options = [
 min_yr = int(df["年度"].min())
 max_yr = int(df["年度"].max())
 
+year_options = [{"label": f"民國 {yr} 年", "value": yr} for yr in sorted(df["年度"].unique())]
+table_category_options = [{"label": c, "value": c} for c in df["類別"].unique()]
+
 app.layout = html.Div(
     style={
         "fontFamily": "Microsoft JhengHei, sans-serif",
@@ -209,11 +212,11 @@ app.layout = html.Div(
         ),
         html.Div(
             [
-                html.H3("📈 歷年體位結構變遷趨勢與比例比較表", style={
+                html.H3("📈 歷年體位結構變遷趨勢", style={
                     "color": "#34495E"
                 }),
                 html.P(
-                    "透過下拉選單與年度滑桿，同步聯動檢視圖表趨勢及對應的比例比較數據：",
+                    "透過下拉選單與年度滑桿，自由組合您想要觀察的體位類別、性別與年份範圍：",
                     style={
                         "color": "#7F8C8D"
                     },
@@ -262,13 +265,6 @@ app.layout = html.Div(
                     style={"marginBottom": "30px", "padding": "0 10px"}
                 ),
                 dcc.Graph(id="trend-line-chart"),
-                html.Div(
-                    [
-                        html.H4("📋 選定範圍之比例數據比較表", style={"color": "#34495E", "marginTop": "20px", "marginBottom": "10px"}),
-                        html.Div(id="table-container")
-                    ],
-                    style={"marginTop": "20px"}
-                )
             ],
             style={
                 "backgroundColor": "#F8F9F9",
@@ -299,21 +295,61 @@ app.layout = html.Div(
                 "boxShadow": "0 2px 4px rgba(0,0,0,0.05)"
             },
         ),
+        html.Div(
+            [
+                html.H3("📋 男女比例差異比較表", style={"color": "#34495E", "marginBottom": "10px"}),
+                html.P("可自由選定年度與體位類別，系統將自動比對男生與女生的數值並計算差額（固定以男女共同顯示與差異分析）：", style={"color": "#7F8C8D"}),
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                html.Label("選擇比較年度：", style={"fontWeight": "bold"}),
+                                dcc.Dropdown(
+                                    id="table-year-dropdown",
+                                    options=year_options,
+                                    value=max_yr,
+                                    clearable=False,
+                                ),
+                            ],
+                            style={"width": "48%", "display": "inline-block"},
+                        ),
+                        html.Div(
+                            [
+                                html.Label("選擇比較體位類別：", style={"fontWeight": "bold"}),
+                                dcc.Dropdown(
+                                    id="table-category-dropdown",
+                                    options=table_category_options,
+                                    value="適中",
+                                    clearable=False,
+                                ),
+                            ],
+                            style={"width": "48%", "display": "inline-block", "float": "right"},
+                        ),
+                    ],
+                    style={"marginBottom": "20px"}
+                ),
+                html.Div(id="table-container")
+            ],
+            style={
+                "backgroundColor": "#F8F9F9",
+                "padding": "20px",
+                "borderRadius": "8px",
+                "marginBottom": "40px",
+                "boxShadow": "0 2px 4px rgba(0,0,0,0.05)"
+            },
+        ),
     ],
 )
 
 @app.callback(
-    [
-        Output("trend-line-chart", "figure"),
-        Output("table-container", "children")
-    ],
+    Output("trend-line-chart", "figure"),
     [
         Input("category-dropdown", "value"), 
         Input("gender-dropdown", "value"),
         Input("year-slider", "value")
     ],
 )
-def update_line_chart_and_table(selected_category, selected_gender, year_range):
+def update_line_chart(selected_category, selected_gender, year_range):
     start_year, end_year = year_range
     dff = df[(df["年度"] >= start_year) & (df["年度"] <= end_year)]
     
@@ -336,7 +372,6 @@ def update_line_chart_and_table(selected_category, selected_gender, year_range):
                 "適中 - 女": "#D62728", "肥胖 - 女": "#FF69B4"
             }
         )
-        table_df = filtered_df[["年度", "性別", "類別", "百分比"]].rename(columns={"年度": "民國年度", "百分比": "比例 (%)"})
     elif selected_gender == "男與女共同顯示":
         filtered_df = dff[dff["性別"].isin(["男", "女", "男性", "女性"])].sort_values("年度")
         if selected_category == "全部類別":
@@ -350,7 +385,6 @@ def update_line_chart_and_table(selected_category, selected_gender, year_range):
                 markers=True,
                 labels={"百分比": "比例 (%)", "年度": "民國年度"},
             )
-            table_df = filtered_df[["年度", "性別", "類別", "百分比"]].rename(columns={"年度": "民國年度", "百分比": "比例 (%)"})
         else:
             sub_df = filtered_df[filtered_df["類別"] == selected_category]
             fig = px.line(
@@ -363,7 +397,6 @@ def update_line_chart_and_table(selected_category, selected_gender, year_range):
                 labels={"百分比": "比例 (%)", "年度": "民國年度"},
                 color_discrete_map=color_map,
             )
-            table_df = sub_df[["年度", "性別", "類別", "百分比"]].rename(columns={"年度": "民國年度", "百分比": "比例 (%)"})
     else:
         if selected_category == "全部類別":
             filtered_df = dff[dff["性別"] == selected_gender].sort_values("年度")
@@ -376,7 +409,6 @@ def update_line_chart_and_table(selected_category, selected_gender, year_range):
                 markers=True,
                 labels={"百分比": "比例 (%)", "年度": "民國年度"},
             )
-            table_df = filtered_df[["年度", "性別", "類別", "百分比"]].rename(columns={"年度": "民國年度", "百分比": "比例 (%)"})
         else:
             filtered_df = dff[
                 (dff["類別"] == selected_category) & (dff["性別"] == selected_gender)
@@ -390,7 +422,6 @@ def update_line_chart_and_table(selected_category, selected_gender, year_range):
                 labels={"百分比": "比例 (%)", "年度": "民國年度"},
                 color_discrete_map=color_map,
             )
-            table_df = filtered_df[["年度", "性別", "類別", "百分比"]].rename(columns={"年度": "民國年度", "百分比": "比例 (%)"})
             
     fig.update_traces(connectgaps=True)
     fig.update_layout(
@@ -400,11 +431,51 @@ def update_line_chart_and_table(selected_category, selected_gender, year_range):
         xaxis=dict(tickmode="linear", dtick=1, range=[start_year - 0.5, end_year + 0.5]),
         yaxis=dict(autorange=True),
     )
+    return fig
+
+@app.callback(
+    Output("table-container", "children"),
+    [
+        Input("table-year-dropdown", "value"),
+        Input("table-category-dropdown", "value")
+    ]
+)
+def update_comparison_table(sel_year, sel_cat):
+    sub_df = df[(df["年度"] == sel_year) & (df["類別"] == sel_cat)]
+    
+    male_row = sub_df[sub_df["性別"].isin(["男", "男性"])]
+    female_row = sub_df[sub_df["性別"].isin(["女", "女性"])]
+    
+    male_val = male_row["百分比"].values[0] if not male_row.empty else 0.0
+    female_val = female_row["百分比"].values[0] if not female_row.empty else 0.0
+    
+    diff = round(male_val - female_val, 2)
+    if diff > 0:
+        comparison_text = f"男比女多 {diff}%"
+    elif diff < 0:
+        comparison_text = f"女比男多 {abs(diff)}%"
+    else:
+        comparison_text = "兩性比例相同 (0%)"
+        
+    table_data = [
+        {
+            "民國年度": sel_year,
+            "體位類別": sel_cat,
+            "男生比例 (%)": male_val,
+            "女生比例 (%)": female_val,
+            "男女差異比較": comparison_text
+        }
+    ]
     
     table_component = dash_table.DataTable(
-        data=table_df.to_dict('records'),
-        columns=[{"name": i, "id": i} for i in table_df.columns],
-        page_size=10,
+        data=table_data,
+        columns=[
+            {"name": "民國年度", "id": "民國年度"},
+            {"name": "體位類別", "id": "體位類別"},
+            {"name": "男生比例 (%)", "id": "男生比例 (%)"},
+            {"name": "女生比例 (%)", "id": "女生比例 (%)"},
+            {"name": "男女差異比較", "id": "男女差異比較"}
+        ],
         style_table={'overflowX': 'auto'},
         style_header={
             'backgroundColor': '#34495E',
@@ -414,7 +485,7 @@ def update_line_chart_and_table(selected_category, selected_gender, year_range):
         },
         style_cell={
             'textAlign': 'center',
-            'padding': '10px',
+            'padding': '12px',
             'fontFamily': 'Microsoft JhengHei, sans-serif'
         },
         style_data_conditional=[
@@ -425,7 +496,7 @@ def update_line_chart_and_table(selected_category, selected_gender, year_range):
         ]
     )
     
-    return fig, table_component
+    return table_component
 
 @app.callback(
     Output("prediction-line-chart", "figure"),
