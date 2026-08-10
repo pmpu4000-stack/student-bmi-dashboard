@@ -7,7 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1r4vXd494wk0tSKCIybcuzE760us-bUE2
 """
 
-!pip install dash
+pip install dash
 
 """1. 核心關聯：生活型態與行為模式的同步影響
 靜態生活與 3C 產品依賴的雙重打擊：
