@@ -176,7 +176,7 @@ category_options = [
     {"label": "📊 全部指標總覽 (過輕/適中/過重/肥胖)", "value": "全部類別"},
     {"label": "⚖️ 適中與肥胖比較 (男藍女紅)", "value": "適中與肥胖"}
 ] + [
-    {"label": f"  • {c}", "value": c} 
+    {"label": f"  • {c}", "value": c}
     for c in df[df["指標類型"] == "BMI 體位"]["類別"].unique()
 ]
 
@@ -194,7 +194,7 @@ app.layout = html.Div(
     },
     children=[
         html.H1(
-            "台灣學生歷年體位趨勢大數據互動報告",
+            "國民小學學生歷年體位趨勢報告",
             style={
                 "textAlign": "center",
                 "color": "#2C3E50",
@@ -344,7 +344,7 @@ app.layout = html.Div(
 @app.callback(
     Output("trend-line-chart", "figure"),
     [
-        Input("category-dropdown", "value"), 
+        Input("category-dropdown", "value"),
         Input("gender-dropdown", "value"),
         Input("year-slider", "value")
     ],
@@ -352,13 +352,13 @@ app.layout = html.Div(
 def update_line_chart(selected_category, selected_gender, year_range):
     start_year, end_year = year_range
     dff = df[(df["年度"] >= start_year) & (df["年度"] <= end_year)]
-    
+
     color_map = {"男": "#1F77B4", "女": "#D62728", "男性": "#1F77B4", "女性": "#D62728"}
-    
+
     if selected_category == "適中與肥胖":
         filtered_df = dff[dff["類別"].isin(["適中", "肥胖"])].sort_values("年度")
         filtered_df["組合標籤"] = filtered_df["類別"] + " - " + filtered_df["性別"]
-        
+
         fig = px.line(
             filtered_df,
             x="年度",
@@ -422,7 +422,7 @@ def update_line_chart(selected_category, selected_gender, year_range):
                 labels={"百分比": "比例 (%)", "年度": "民國年度"},
                 color_discrete_map=color_map,
             )
-            
+
     fig.update_traces(connectgaps=True)
     fig.update_layout(
         hovermode="x unified",
@@ -442,13 +442,13 @@ def update_line_chart(selected_category, selected_gender, year_range):
 )
 def update_comparison_table(sel_year, sel_cat):
     sub_df = df[(df["年度"] == sel_year) & (df["類別"] == sel_cat)]
-    
+
     male_row = sub_df[sub_df["性別"].isin(["男", "男性"])]
     female_row = sub_df[sub_df["性別"].isin(["女", "女性"])]
-    
+
     male_val = male_row["百分比"].values[0] if not male_row.empty else 0.0
     female_val = female_row["百分比"].values[0] if not female_row.empty else 0.0
-    
+
     diff = round(male_val - female_val, 2)
     if diff > 0:
         comparison_text = f"男比女多 {diff}%"
@@ -456,7 +456,7 @@ def update_comparison_table(sel_year, sel_cat):
         comparison_text = f"女比男多 {abs(diff)}%"
     else:
         comparison_text = "兩性比例相同 (0%)"
-        
+
     table_data = [
         {
             "民國年度": sel_year,
@@ -466,7 +466,7 @@ def update_comparison_table(sel_year, sel_cat):
             "男女差異比較": comparison_text
         }
     ]
-    
+
     table_component = dash_table.DataTable(
         data=table_data,
         columns=[
@@ -495,7 +495,7 @@ def update_comparison_table(sel_year, sel_cat):
             }
         ]
     )
-    
+
     return table_component
 
 @app.callback(
@@ -507,32 +507,32 @@ def update_prediction_chart(selected_category, selected_gender):
         categories_to_predict = ["適中", "肥胖"]
     else:
         categories_to_predict = df["類別"].unique() if selected_category == "全部類別" else [selected_category]
-    
+
     if selected_gender == "男與女共同顯示" or selected_category == "適中與肥胖":
         genders_to_predict = ["男", "女"]
     else:
         genders_to_predict = [selected_gender]
-        
+
     all_pred_dfs = []
     for cat in categories_to_predict:
         for gen in genders_to_predict:
             sub_df = df[(df["類別"] == cat) & (df["性別"] == gen)].sort_values("年度")
             X = sub_df["年度"].values
             y = sub_df["百分比"].values
-            
+
             if len(X) > 1:
                 slope, intercept = np.polyfit(X, y, 1)
                 future_years = np.array([X[-1] + 1, X[-1] + 2, X[-1] + 3])
                 future_y = slope * future_years + intercept
-                
+
                 all_years = np.concatenate([X, future_years])
                 all_y = np.concatenate([y, future_y])
-                
+
                 if selected_gender == "男與女共同顯示" or selected_category == "適中與肥胖":
                     type_labels = [f"{gen} (歷史)"] * len(X) + [f"{gen} (預測)"] * len(future_years)
                 else:
                     type_labels = ["歷史數據"] * len(X) + ["AI 線性趨勢預測"] * len(future_years)
-                    
+
                 temp_pred_df = pd.DataFrame({
                     "年度": all_years,
                     "百分比": all_y,
@@ -540,12 +540,12 @@ def update_prediction_chart(selected_category, selected_gender):
                     "資料類型": type_labels
                 })
                 all_pred_dfs.append(temp_pred_df)
-                
+
     if all_pred_dfs:
         pred_df = pd.concat(all_pred_dfs, ignore_index=True)
     else:
         pred_df = pd.DataFrame(columns=["年度", "百分比", "系列", "資料類型"])
-        
+
     if selected_category == "全部類別" or selected_gender == "男與女共同顯示" or selected_category == "適中與肥胖":
         fig = px.line(
             pred_df,
@@ -568,7 +568,7 @@ def update_prediction_chart(selected_category, selected_gender):
             labels={"百分比": "比例 (%)", "年度": "民國年度"},
             color_discrete_map={"歷史數據": "#2980B9", "AI 線性趨勢預測": "#E67E22"}
         )
-        
+
     fig.update_traces(connectgaps=True)
     min_year = int(df["年度"].min())
     max_year = int(df["年度"].max()) + 3
