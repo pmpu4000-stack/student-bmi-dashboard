@@ -3,7 +3,6 @@ import os
 import dash
 from dash import dcc, html, Input, Output
 import dash_mantine_components as dmc
-import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
@@ -160,7 +159,6 @@ df = pd.read_csv(io.StringIO(csv_data))
 df["年度"] = df["年度"].astype(int)
 df["百分比"] = df["百分比"].astype(float)
 df["性別體位組合Key"] = df["性別"] + "_" + df["體位類別"]
-df["標示類別"] = df["性別"] + "生 - " + df["體位類別"]
 
 MIN_YEAR, MAX_YEAR = int(df["年度"].min()), int(df["年度"].max())
 
@@ -197,7 +195,6 @@ app.index_string = f"""
         {{%favicon%}}
         {{%css%}}
         <style>
-            /* 隱藏輸入框微調按鈕 */
             input[type=number]::-webkit-inner-spin-button,
             input[type=number]::-webkit-outer-spin-button {{
                 -webkit-appearance: none;
@@ -206,7 +203,6 @@ app.index_string = f"""
             input[type=number] {{
                 -moz-appearance: textfield;
             }}
-            /* 重疊時讓滑鼠懸停或聚焦的白點提升至最上層，方便抓取拉開 */
             .mantine-Slider-thumb:hover,
             .mantine-Slider-thumb:focus,
             .mantine-Slider-thumb:active {{
@@ -245,7 +241,6 @@ app.layout = dmc.MantineProvider(
     children=[
         html.Div(
             [
-                # 主標題區塊
                 html.Div(
                     [
                         html.H1(
@@ -274,10 +269,8 @@ app.layout = dmc.MantineProvider(
                         ),
                     ]
                 ),
-                # 控制面板區塊
                 html.Div(
                     [
-                        # 1. 選擇比較組合
                         html.Div(
                             [
                                 html.Label(
@@ -353,7 +346,6 @@ app.layout = dmc.MantineProvider(
                             ],
                             style={"flexShrink": 0, "marginRight": "40px"},
                         ),
-                        # 2. 選擇年份範圍
                         html.Div(
                             [
                                 html.Label(
@@ -400,12 +392,10 @@ app.layout = dmc.MantineProvider(
                                         "marginBottom": "10px",
                                     },
                                 ),
-                                # 錯誤警示訊息
                                 html.Div(
                                     id="year-error-message",
                                     style={"minHeight": "20px"},
                                 ),
-                                # 紫色滑條（年度數字在上方、支援交叉與重疊抓取）
                                 dmc.RangeSlider(
                                     id="year-range-slider",
                                     min=MIN_YEAR,
@@ -460,8 +450,250 @@ app.layout = dmc.MantineProvider(
                         "border": "1px solid #444",
                     },
                 ),
-                # 圖表輸出
+                # 乾淨無文字干擾的折線圖輸出
                 dcc.Graph(id="trend-line-chart"),
+                # 歷史政策與關鍵事件時間軸專區
+                html.Div(
+                    [
+                        html.H3(
+                            "📚 歷史政策與關鍵事件時間軸",
+                            style={
+                                "fontSize": "18px",
+                                "fontWeight": "bold",
+                                "marginBottom": "15px",
+                                "marginTop": "25px",
+                                "color": "#ffb74d",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                html.Div(
+                                    [
+                                        html.Div(
+                                            "民國 94 年起",
+                                            style={
+                                                "backgroundColor": "#ffd54f",
+                                                "color": "#1e1e1e",
+                                                "padding": "4px 12px",
+                                                "borderRadius": "4px",
+                                                "fontWeight": "bold",
+                                                "fontSize": "13px",
+                                                "display": "inline-block",
+                                                "marginBottom": "6px",
+                                            },
+                                        ),
+                                        html.Div(
+                                            "校園飲品及點心販售範圍：教育部訂定校園飲品及點心販售範圍，規範校園內販售食品之營養成分與熱量限制。",
+                                            style={
+                                                "color": "#e0e0e0",
+                                                "fontSize": "14px",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "padding": "12px 15px",
+                                        "backgroundColor": "#252525",
+                                        "borderRadius": "6px",
+                                        "borderLeft": "4px solid #ffd54f",
+                                        "marginBottom": "10px",
+                                    },
+                                ),
+                                html.Div(
+                                    [
+                                        html.Div(
+                                            "民國 96 年起",
+                                            style={
+                                                "backgroundColor": "#fbc02d",
+                                                "color": "#1e1e1e",
+                                                "padding": "4px 12px",
+                                                "borderRadius": "4px",
+                                                "fontWeight": "bold",
+                                                "fontSize": "13px",
+                                                "display": "inline-block",
+                                                "marginBottom": "6px",
+                                            },
+                                        ),
+                                        html.Div(
+                                            "智慧型手機普及：智慧型手機、平板電腦與行動網路開始普及，學童 3C 使用時間與生活型態逐漸轉變。",
+                                            style={
+                                                "color": "#e0e0e0",
+                                                "fontSize": "14px",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "padding": "12px 15px",
+                                        "backgroundColor": "#252525",
+                                        "borderRadius": "6px",
+                                        "borderLeft": "4px solid #fbc02d",
+                                        "marginBottom": "10px",
+                                    },
+                                ),
+                                html.Div(
+                                    [
+                                        html.Div(
+                                            "民國 97 年起",
+                                            style={
+                                                "backgroundColor": "#81c784",
+                                                "color": "#1e1e1e",
+                                                "padding": "4px 12px",
+                                                "borderRadius": "4px",
+                                                "fontWeight": "bold",
+                                                "fontSize": "13px",
+                                                "display": "inline-block",
+                                                "marginBottom": "6px",
+                                            },
+                                        ),
+                                        html.Div(
+                                            "健康促進學校計畫：全面推動健康促進學校計畫，強化校園健康自主管理與均衡飲食。",
+                                            style={
+                                                "color": "#e0e0e0",
+                                                "fontSize": "14px",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "padding": "12px 15px",
+                                        "backgroundColor": "#252525",
+                                        "borderRadius": "6px",
+                                        "borderLeft": "4px solid #81c784",
+                                        "marginBottom": "10px",
+                                    },
+                                ),
+                                html.Div(
+                                    [
+                                        html.Div(
+                                            "民國 99 年起",
+                                            style={
+                                                "backgroundColor": "#3f51b5",
+                                                "color": "#1e1e1e",
+                                                "padding": "4px 12px",
+                                                "borderRadius": "4px",
+                                                "fontWeight": "bold",
+                                                "fontSize": "13px",
+                                                "display": "inline-block",
+                                                "marginBottom": "6px",
+                                            },
+                                        ),
+                                        html.Div(
+                                            "外送平台興起：餐飲外送平台興起，改變大眾與學童家庭的飲食取得習慣與營養結構。",
+                                            style={
+                                                "color": "#e0e0e0",
+                                                "fontSize": "14px",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "padding": "12px 15px",
+                                        "backgroundColor": "#252525",
+                                        "borderRadius": "6px",
+                                        "borderLeft": "4px solid #3f51b5",
+                                        "marginBottom": "10px",
+                                    },
+                                ),
+                                html.Div(
+                                    [
+                                        html.Div(
+                                            "民國 103 年起",
+                                            style={
+                                                "backgroundColor": "#7986cb",
+                                                "color": "#1e1e1e",
+                                                "padding": "4px 12px",
+                                                "borderRadius": "4px",
+                                                "fontWeight": "bold",
+                                                "fontSize": "13px",
+                                                "display": "inline-block",
+                                                "marginBottom": "6px",
+                                            },
+                                        ),
+                                        html.Div(
+                                            "健康成長密碼 85210：推動健康口訣與減重計畫（8:睡足8小時, 5:天天5蔬果, 2:看螢幕少於2小時, 1:每天運動至少30分鐘, 0:不喝含糖飲料）。",
+                                            style={
+                                                "color": "#e0e0e0",
+                                                "fontSize": "14px",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "padding": "12px 15px",
+                                        "backgroundColor": "#252525",
+                                        "borderRadius": "6px",
+                                        "borderLeft": "4px solid #7986cb",
+                                        "marginBottom": "10px",
+                                    },
+                                ),
+                                html.Div(
+                                    [
+                                        html.Div(
+                                            "民國 104 年起",
+                                            style={
+                                                "backgroundColor": "#ba68c8",
+                                                "color": "#1e1e1e",
+                                                "padding": "4px 12px",
+                                                "borderRadius": "4px",
+                                                "fontWeight": "bold",
+                                                "fontSize": "13px",
+                                                "display": "inline-block",
+                                                "marginBottom": "6px",
+                                            },
+                                        ),
+                                        html.Div(
+                                            "全面推動營養午餐登錄：全面推動營養午餐食材登錄與溯源，強化校園飲食安全與透明度。",
+                                            style={
+                                                "color": "#e0e0e0",
+                                                "fontSize": "14px",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "padding": "12px 15px",
+                                        "backgroundColor": "#252525",
+                                        "borderRadius": "6px",
+                                        "borderLeft": "4px solid #ba68c8",
+                                        "marginBottom": "10px",
+                                    },
+                                ),
+                                html.Div(
+                                    [
+                                        html.Div(
+                                            "民國 109 年 - 112 年",
+                                            style={
+                                                "backgroundColor": "#9c27b0",
+                                                "color": "#1e1e1e",
+                                                "padding": "4px 12px",
+                                                "borderRadius": "4px",
+                                                "fontWeight": "bold",
+                                                "fontSize": "13px",
+                                                "display": "inline-block",
+                                                "marginBottom": "6px",
+                                            },
+                                        ),
+                                        html.Div(
+                                            "COVID-19 疫情衝擊：COVID-19 疫情衝擊，居家防疫、線上教學與戶外活動受限，對學童體位與活動量產生顯著影響。",
+                                            style={
+                                                "color": "#e0e0e0",
+                                                "fontSize": "14px",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "padding": "12px 15px",
+                                        "backgroundColor": "#252525",
+                                        "borderRadius": "6px",
+                                        "borderLeft": "4px solid #9c27b0",
+                                    },
+                                ),
+                            ],
+                            style={
+                                "backgroundColor": CARD_BG,
+                                "padding": "20px 25px",
+                                "borderRadius": "8px",
+                                "border": "1px solid #444",
+                            },
+                        ),
+                    ],
+                    style={"marginTop": "15px"},
+                ),
             ],
             style={
                 "padding": "20px 40px",
@@ -477,7 +709,6 @@ app.layout = dmc.MantineProvider(
 # ------------------------------------------------------------------------------
 
 
-# 1. 雙向同步與輸入欄位驗證
 @app.callback(
     [
         Output("start-year-input", "value"),
@@ -492,19 +723,13 @@ app.layout = dmc.MantineProvider(
     ],
 )
 def sync_and_validate_years(start_in, end_in, slider_val):
-    triggered_id = (
-        dash.callback_context.triggered[0]["prop_id"].split(".")[0]
-        if dash.callback_context.triggered
-        else None
-    )
+    triggered_id = dash.ctx.triggered_id
 
-    # 當滑軌拖動時
-    if triggered_id == "year-range-slider":
+    if triggered_id == "year-range-slider" and slider_val:
         real_start = min(slider_val)
         real_end = max(slider_val)
         return real_start, real_end, slider_val, ""
 
-    # 檢查輸入格式
     if start_in is None or end_in is None:
         return (
             start_in,
@@ -516,9 +741,12 @@ def sync_and_validate_years(start_in, end_in, slider_val):
             ),
         )
 
-    # 檢查數據範圍
+    actual_start = min(start_in, end_in)
+    actual_end = max(start_in, end_in)
+
     if not (
-        MIN_YEAR <= start_in <= MAX_YEAR and MIN_YEAR <= end_in <= MAX_YEAR
+        MIN_YEAR <= actual_start <= MAX_YEAR
+        and MIN_YEAR <= actual_end <= MAX_YEAR
     ):
         err = f"⚠️ 輸入超出範圍！請輸入民國 {MIN_YEAR} 年至 {MAX_YEAR} 年之間的數字"
         return (
@@ -531,10 +759,9 @@ def sync_and_validate_years(start_in, end_in, slider_val):
             ),
         )
 
-    return start_in, end_in, [start_in, end_in], ""
+    return actual_start, actual_end, [actual_start, actual_end], ""
 
 
-# 2. 折線圖渲染
 @app.callback(
     Output("trend-line-chart", "figure"),
     [
@@ -545,10 +772,16 @@ def sync_and_validate_years(start_in, end_in, slider_val):
 )
 def update_trend_chart(male_selected, female_selected, year_range):
     selected_groups = (male_selected or []) + (female_selected or [])
+    fig = go.Figure()
 
-    # 未選擇項目時顯示提示
+    if not year_range:
+        year_range = [MIN_YEAR, MAX_YEAR]
+
+    filtered_df = df[
+        (df["年度"] >= min(year_range)) & (df["年度"] <= max(year_range))
+    ]
+
     if not selected_groups:
-        fig = go.Figure()
         fig.add_annotation(
             text="請至少勾選一種比較組合...",
             xref="paper",
@@ -556,47 +789,151 @@ def update_trend_chart(male_selected, female_selected, year_range):
             x=0.5,
             y=0.5,
             showarrow=False,
-            font=dict(size=16, color="#aaaaaa"),
+            font=dict(size=18, color="#ffffff"),
         )
-    else:
-        filtered_df = df[
-            (df["年度"] >= year_range[0]) & (df["年度"] <= year_range[1])
+        fig.update_layout(
+            paper_bgcolor=DARK_BG,
+            plot_bgcolor=CARD_BG,
+            xaxis=dict(
+                showgrid=False,
+                zeroline=False,
+                showticklabels=False,
+                showline=False,
+            ),
+            yaxis=dict(
+                showgrid=False,
+                zeroline=False,
+                showticklabels=False,
+                showline=False,
+            ),
+            margin=dict(l=40, r=40, t=60, b=40),
+        )
+        return fig
+
+    for group in selected_groups:
+        parts = group.split("_")
+        gender_prefix = parts[0]
+        category = parts[1]
+        sub_df = filtered_df[
+            (filtered_df["性別"] == gender_prefix)
+            & (filtered_df["體位類別"] == category)
         ]
-        fig = go.Figure()
-        for group in selected_groups:
-            parts = group.split("_")
-            gender_prefix = parts[0]
-            category = parts[1]
-            sub_df = filtered_df[
-                (filtered_df["性別"] == gender_prefix)
-                & (filtered_df["體位類別"] == category)
-            ]
-            label_name = (
-                f"{'男生' if gender_prefix == '男' else '女生'} - {category}"
-            )
-            color = COLOR_MAP.get(label_name, "#ffffff")
+        label_name = f"{'男生' if gender_prefix == '男' else '女生'} - {category}"
+        color = COLOR_MAP.get(label_name, "#ffffff")
 
-            fig.add_trace(
-                go.Scatter(
-                    x=sub_df["年度"],
-                    y=sub_df["百分比"],
-                    mode="lines+markers",
-                    name=label_name,
-                    line=dict(color=color, width=3),
-                    marker=dict(size=8),
-                )
+        fig.add_trace(
+            go.Scatter(
+                x=sub_df["年度"],
+                y=sub_df["百分比"],
+                mode="lines+markers",
+                name=label_name,
+                line=dict(color=color, width=3),
+                marker=dict(size=8),
+                hovertemplate="%{y:.1f}%<extra>%{fullData.name}</extra>",
             )
+        )
 
+    # 1. 校園飲品及點心販售範圍 (94年)：亮黃色
+    if min(year_range) <= 94 <= max(year_range):
+        fig.add_vrect(
+            x0=93.8,
+            x1=94.2,
+            fillcolor="#ffd54f",
+            opacity=0.3,
+            line_width=1,
+            line_dash="dot",
+            line_color="#ffd54f",
+        )
+
+    # 2. 智慧型手機普及 (96年)：黃色
+    if min(year_range) <= 96 <= max(year_range):
+        fig.add_vrect(
+            x0=95.8,
+            x1=96.2,
+            fillcolor="#fbc02d",
+            opacity=0.3,
+            line_width=1,
+            line_dash="dot",
+            line_color="#fbc02d",
+        )
+
+    # 3. 健康促進學校計畫 (97年)：亮綠色
+    if min(year_range) <= 97 <= max(year_range):
+        fig.add_vrect(
+            x0=96.8,
+            x1=97.2,
+            fillcolor="#81c784",
+            opacity=0.3,
+            line_width=1,
+            line_dash="dot",
+            line_color="#81c784",
+        )
+
+    # 4. 外送平台興起 (99年)：靛色
+    if min(year_range) <= 99 <= max(year_range):
+        fig.add_vrect(
+            x0=98.8,
+            x1=99.2,
+            fillcolor="#3f51b5",
+            opacity=0.3,
+            line_width=1,
+            line_dash="dot",
+            line_color="#3f51b5",
+        )
+
+    # 5. 健康成長密碼 85210 (103年)：亮靛色
+    if min(year_range) <= 103 <= max(year_range):
+        fig.add_vrect(
+            x0=102.8,
+            x1=103.2,
+            fillcolor="#7986cb",
+            opacity=0.3,
+            line_width=1,
+            line_dash="dot",
+            line_color="#7986cb",
+        )
+
+    # 6. 全面推動營養午餐登錄 (104年)：亮紫色
+    if min(year_range) <= 104 <= max(year_range):
+        fig.add_vrect(
+            x0=103.8,
+            x1=104.2,
+            fillcolor="#ba68c8",
+            opacity=0.3,
+            line_width=1,
+            line_dash="dot",
+            line_color="#ba68c8",
+        )
+
+    # 7. COVID-19 疫情衝擊 (109-112年)：紫色
+    if max(year_range) >= 109 and min(year_range) <= 112:
+        fig.add_vrect(
+            x0=108.8,
+            x1=112.2,
+            fillcolor="#9c27b0",
+            opacity=0.15,
+            line_width=0,
+        )
+
+    # 設定 X 軸刻度完整顯示 96 到 113 年
+    all_years = list(range(96, 114))
     fig.update_layout(
-        title="歷年體位變遷比較",
-        xaxis_title="年度",
+        title="歷年體位變遷趨勢",
+        xaxis_title="年度 (民國)",
         yaxis_title="百分比 (%)",
         paper_bgcolor=DARK_BG,
         plot_bgcolor=CARD_BG,
         font=dict(color=TEXT_COLOR),
-        hovermode="x unified",  # 關鍵設定：將同一年度的所有資料聚合在同一個提示框顯示
+        hovermode="x unified",
         hoverlabel=dict(bgcolor="#2d2d2d", font_color="#ffffff", font_size=13),
-        xaxis=dict(showgrid=True, gridcolor="#333333"),
+        xaxis=dict(
+            showgrid=True,
+            gridcolor="#333333",
+            tickmode="array",
+            tickvals=all_years,
+            ticktext=[str(y) for y in all_years],
+            range=[min(year_range) - 0.5, max(year_range) + 0.5],
+        ),
         yaxis=dict(showgrid=True, gridcolor="#333333"),
         legend=dict(title="比較族群", bgcolor="rgba(0,0,0,0)"),
         margin=dict(l=40, r=40, t=60, b=40),
