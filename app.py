@@ -403,4 +403,5 @@ def update_trend_chart(male_selected, female_selected, year_range):
 # 5. 啟動服務
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port, debug=False)
