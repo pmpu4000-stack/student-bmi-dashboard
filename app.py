@@ -1,10 +1,11 @@
+import io
+import os
 import dash
 from dash import dcc, html, Input, Output
 import dash_mantine_components as dmc
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
-import io
 
 # ------------------------------------------------------------------------------
 # 1. 原始資料與預處理解析
@@ -166,21 +167,28 @@ MIN_YEAR, MAX_YEAR = int(df["年度"].min()), int(df["年度"].max())
 # UI 常數定義
 DARK_BG, CARD_BG, TEXT_COLOR = "#1e1e1e", "#2d2d2d", "#ffffff"
 MALE_COLOR, FEMALE_COLOR = "#29b6f6", "#ff4081"
-
-MALE_OPTIONS = [{"label": cat, "value": f"男_{cat}"} for cat in ["過輕", "適中", "過重", "肥胖"]]
-FEMALE_OPTIONS = [{"label": cat, "value": f"女_{cat}"} for cat in ["過輕", "適中", "過重", "肥胖"]]
-
+MALE_OPTIONS = [
+    {"label": cat, "value": f"男_{cat}"} for cat in ["過輕", "適中", "過重", "肥胖"]
+]
+FEMALE_OPTIONS = [
+    {"label": cat, "value": f"女_{cat}"} for cat in ["過輕", "適中", "過重", "肥胖"]
+]
 COLOR_MAP = {
-    "男生 - 過輕": "#81d4fa", "男生 - 適中": "#29b6f6", "男生 - 過重": "#0288d1", "男生 - 肥胖": "#01579b",
-    "女生 - 過輕": "#ff80ab", "女生 - 適中": "#ff4081", "女生 - 過重": "#f50057", "女生 - 肥胖": "#c51162",
+    "男生 - 過輕": "#81d4fa",
+    "男生 - 適中": "#29b6f6",
+    "男生 - 過重": "#0288d1",
+    "男生 - 肥胖": "#01579b",
+    "女生 - 過輕": "#ff80ab",
+    "女生 - 適中": "#ff4081",
+    "女生 - 過重": "#f50057",
+    "女生 - 肥胖": "#c51162",
 }
 
 # ------------------------------------------------------------------------------
 # 2. Dash App 設定
 # ------------------------------------------------------------------------------
 app = dash.Dash(__name__)
-
-app.index_string = f'''
+app.index_string = f"""
 <!DOCTYPE html>
 <html>
     <head>
@@ -190,15 +198,14 @@ app.index_string = f'''
         {{%css%}}
         <style>
             /* 隱藏輸入框微調按鈕 */
-            input[type=number]::-webkit-inner-spin-button, 
-            input[type=number]::-webkit-outer-spin-button {{ 
-                -webkit-appearance: none; 
-                margin: 0; 
+            input[type=number]::-webkit-inner-spin-button,
+            input[type=number]::-webkit-outer-spin-button {{
+                -webkit-appearance: none;
+                margin: 0;
             }}
             input[type=number] {{
                 -moz-appearance: textfield;
             }}
-            
             /* 重疊時讓滑鼠懸停或聚焦的白點提升至最上層，方便抓取拉開 */
             .mantine-Slider-thumb:hover,
             .mantine-Slider-thumb:focus,
@@ -216,192 +223,388 @@ app.index_string = f'''
         </footer>
     </body>
 </html>
-'''
+"""
 
 # ------------------------------------------------------------------------------
 # 3. Layout 設定
 # ------------------------------------------------------------------------------
 input_style = {
-    "width": "75px", "padding": "6px", "borderRadius": "4px",
-    "border": "1px solid #555555", "backgroundColor": CARD_BG,
-    "color": TEXT_COLOR, "textAlign": "center", "fontSize": "14px", "fontWeight": "bold"
+    "width": "75px",
+    "padding": "6px",
+    "borderRadius": "4px",
+    "border": "1px solid #555555",
+    "backgroundColor": CARD_BG,
+    "color": TEXT_COLOR,
+    "textAlign": "center",
+    "fontSize": "14px",
+    "fontWeight": "bold",
 }
 
 app.layout = dmc.MantineProvider(
     theme={"colorScheme": "dark"},
     children=[
-        html.Div([
-            # 主標題區塊
-            html.Div([
-                html.H1("國民小學學生歷年體位趨勢報告", style={"textAlign": "center", "fontWeight": "bold", "marginBottom": "10px"}),
-                html.P("專題研究：探討民國 96 年至 113 年國民體位統計數據之變遷、性別差異與未來預測", style={"textAlign": "center", "color": "#aaaaaa", "marginBottom": "30px"}),
-                html.H2("體位結構變遷折線圖", style={"textAlign": "center", "fontWeight": "bold", "marginBottom": "20px"}),
-            ]),
-
-            # 控制面板區塊
-            html.Div([
-                # 1. 選擇比較組合
-                html.Div([
-                    html.Label("選擇比較組合：", style={"fontWeight": "bold", "marginBottom": "10px", "display": "block"}),
-                    html.Div([
-                        html.Div([
-                            html.Span("男生：", style={"fontWeight": "bold", "color": MALE_COLOR, "marginRight": "10px"}),
-                            dcc.Checklist(id="male-checklist", options=MALE_OPTIONS, value=["男_適中"],
-                                          labelStyle={'display': 'inline-block', 'marginRight': '12px', 'color': MALE_COLOR})
-                        ], style={"display": "flex", "alignItems": "center", "marginRight": "20px"}),
-                        
-                        html.Div([
-                            html.Span("女生：", style={"fontWeight": "bold", "color": FEMALE_COLOR, "marginRight": "10px"}),
-                            dcc.Checklist(id="female-checklist", options=FEMALE_OPTIONS, value=["女_適中"],
-                                          labelStyle={'display': 'inline-block', 'marginRight': '12px', 'color': FEMALE_COLOR})
-                        ], style={"display": "flex", "alignItems": "center"}),
-                    ], style={"display": "flex", "alignItems": "center", "marginTop": "5px"}),
-                ], style={"flexShrink": 0, "marginRight": "40px"}),
-                
-                # 2. 選擇年份範圍
-                html.Div([
-                    html.Label("選擇年份範圍：", style={"fontWeight": "bold", "marginBottom": "10px", "display": "block"}),
-                    html.Div([
-                        html.Span("民國 ", style={"marginRight": "4px"}),
-                        dcc.Input(id="start-year-input", type="number", step=1, value=MIN_YEAR, style=input_style),
-                        html.Span(" 年  至 民國 ", style={"margin": "0 8px"}),
-                        dcc.Input(id="end-year-input", type="number", step=1, value=MAX_YEAR, style=input_style),
-                        html.Span(" 年", style={"marginLeft": "4px"})
-                    ], style={"display": "flex", "alignItems": "center", "height": "32px", "marginBottom": "10px"}),
-                    
-                    # 錯誤警示訊息
-                    html.Div(id="year-error-message", style={"minHeight": "20px"}),
-
-                    # 紫色滑條（年度數字在上方、支援交叉與重疊抓取）
-                    dmc.RangeSlider(
-                        id="year-range-slider",
-                        min=MIN_YEAR,
-                        max=MAX_YEAR,
-                        step=1,
-                        value=[MIN_YEAR, MAX_YEAR],
-                        minRange=0,
-                        pushOnOverlap=False,
-                        color="violet",
-                        size="sm",
-                        marks=[
-                            {
-                                "value": y, 
-                                "label": str(y), 
-                                "style": {
-                                    "transform": "translateY(-22px) translateX(-50%)", 
-                                    "fontSize": "11px", 
-                                    "color": "#C1C2C5"
-                                }
-                            } 
-                            for y in range(MIN_YEAR, MAX_YEAR + 1)
-                        ],
-                        styles={
-                            "root": {"padding": "0 10px", "marginTop": "25px", "marginBottom": "10px"},
-                            "track": {"backgroundColor": "#424242"},
-                            "thumb": {"backgroundColor": "#ffffff", "borderColor": "#7950F2", "borderWidth": "2px"},
-                            "mark": {"backgroundColor": "#2D2D2D", "borderColor": "#666666"}
-                        }
-                    )
-                ], style={"flex": 1, "minWidth": "450px"}), 
-            ], style={
-                "display": "flex", "alignItems": "flex-start", "marginBottom": "20px", 
-                "padding": "20px 25px", "backgroundColor": CARD_BG, "borderRadius": "8px", "border": "1px solid #444"
-            }),
-
-            # 圖表輸出
-            dcc.Graph(id="trend-line-chart")
-        ], style={"padding": "20px 40px", "backgroundColor": DARK_BG, "minHeight": "100vh"})
-    ]
+        html.Div(
+            [
+                # 主標題區塊
+                html.Div(
+                    [
+                        html.H1(
+                            "國民小學學生歷年體位趨勢報告",
+                            style={
+                                "textAlign": "center",
+                                "fontWeight": "bold",
+                                "marginBottom": "10px",
+                            },
+                        ),
+                        html.P(
+                            "專題研究：探討民國 96 年至 113 年國民體位統計數據之變遷、性別差異與未來預測",
+                            style={
+                                "textAlign": "center",
+                                "color": "#aaaaaa",
+                                "marginBottom": "30px",
+                            },
+                        ),
+                        html.H2(
+                            "體位結構變遷折線圖",
+                            style={
+                                "textAlign": "center",
+                                "fontWeight": "bold",
+                                "marginBottom": "20px",
+                            },
+                        ),
+                    ]
+                ),
+                # 控制面板區塊
+                html.Div(
+                    [
+                        # 1. 選擇比較組合
+                        html.Div(
+                            [
+                                html.Label(
+                                    "選擇比較組合：",
+                                    style={
+                                        "fontWeight": "bold",
+                                        "marginBottom": "10px",
+                                        "display": "block",
+                                    },
+                                ),
+                                html.Div(
+                                    [
+                                        html.Div(
+                                            [
+                                                html.Span(
+                                                    "男生：",
+                                                    style={
+                                                        "fontWeight": "bold",
+                                                        "color": MALE_COLOR,
+                                                        "marginRight": "10px",
+                                                    },
+                                                ),
+                                                dcc.Checklist(
+                                                    id="male-checklist",
+                                                    options=MALE_OPTIONS,
+                                                    value=["男_適中"],
+                                                    labelStyle={
+                                                        "display": "inline-block",
+                                                        "marginRight": "12px",
+                                                        "color": MALE_COLOR,
+                                                    },
+                                                ),
+                                            ],
+                                            style={
+                                                "display": "flex",
+                                                "alignItems": "center",
+                                                "marginRight": "20px",
+                                            },
+                                        ),
+                                        html.Div(
+                                            [
+                                                html.Span(
+                                                    "女生：",
+                                                    style={
+                                                        "fontWeight": "bold",
+                                                        "color": FEMALE_COLOR,
+                                                        "marginRight": "10px",
+                                                    },
+                                                ),
+                                                dcc.Checklist(
+                                                    id="female-checklist",
+                                                    options=FEMALE_OPTIONS,
+                                                    value=["女_適中"],
+                                                    labelStyle={
+                                                        "display": "inline-block",
+                                                        "marginRight": "12px",
+                                                        "color": FEMALE_COLOR,
+                                                    },
+                                                ),
+                                            ],
+                                            style={
+                                                "display": "flex",
+                                                "alignItems": "center",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "display": "flex",
+                                        "alignItems": "center",
+                                        "marginTop": "5px",
+                                    },
+                                ),
+                            ],
+                            style={"flexShrink": 0, "marginRight": "40px"},
+                        ),
+                        # 2. 選擇年份範圍
+                        html.Div(
+                            [
+                                html.Label(
+                                    "選擇年份範圍：",
+                                    style={
+                                        "fontWeight": "bold",
+                                        "marginBottom": "10px",
+                                        "display": "block",
+                                    },
+                                ),
+                                html.Div(
+                                    [
+                                        html.Span(
+                                            "民國 ",
+                                            style={"marginRight": "4px"},
+                                        ),
+                                        dcc.Input(
+                                            id="start-year-input",
+                                            type="number",
+                                            step=1,
+                                            value=MIN_YEAR,
+                                            style=input_style,
+                                        ),
+                                        html.Span(
+                                            " 年  至 民國 ",
+                                            style={"margin": "0 8px"},
+                                        ),
+                                        dcc.Input(
+                                            id="end-year-input",
+                                            type="number",
+                                            step=1,
+                                            value=MAX_YEAR,
+                                            style=input_style,
+                                        ),
+                                        html.Span(
+                                            " 年",
+                                            style={"marginLeft": "4px"},
+                                        ),
+                                    ],
+                                    style={
+                                        "display": "flex",
+                                        "alignItems": "center",
+                                        "height": "32px",
+                                        "marginBottom": "10px",
+                                    },
+                                ),
+                                # 錯誤警示訊息
+                                html.Div(
+                                    id="year-error-message",
+                                    style={"minHeight": "20px"},
+                                ),
+                                # 紫色滑條（年度數字在上方、支援交叉與重疊抓取）
+                                dmc.RangeSlider(
+                                    id="year-range-slider",
+                                    min=MIN_YEAR,
+                                    max=MAX_YEAR,
+                                    step=1,
+                                    value=[MIN_YEAR, MAX_YEAR],
+                                    minRange=0,
+                                    pushOnOverlap=False,
+                                    color="violet",
+                                    size="sm",
+                                    marks=[
+                                        {
+                                            "value": y,
+                                            "label": str(y),
+                                            "style": {
+                                                "transform": "translateY(-22px) translateX(-50%)",
+                                                "fontSize": "11px",
+                                                "color": "#C1C2C5",
+                                            },
+                                        }
+                                        for y in range(MIN_YEAR, MAX_YEAR + 1)
+                                    ],
+                                    styles={
+                                        "root": {
+                                            "padding": "0 10px",
+                                            "marginTop": "25px",
+                                            "marginBottom": "10px",
+                                        },
+                                        "track": {"backgroundColor": "#424242"},
+                                        "thumb": {
+                                            "backgroundColor": "#ffffff",
+                                            "borderColor": "#7950F2",
+                                            "borderWidth": "2px",
+                                        },
+                                        "mark": {
+                                            "backgroundColor": "#2D2D2D",
+                                            "borderColor": "#666666",
+                                        },
+                                    },
+                                ),
+                            ],
+                            style={"flex": 1, "minWidth": "450px"},
+                        ),
+                    ],
+                    style={
+                        "display": "flex",
+                        "alignItems": "flex-start",
+                        "marginBottom": "20px",
+                        "padding": "20px 25px",
+                        "backgroundColor": CARD_BG,
+                        "borderRadius": "8px",
+                        "border": "1px solid #444",
+                    },
+                ),
+                # 圖表輸出
+                dcc.Graph(id="trend-line-chart"),
+            ],
+            style={
+                "padding": "20px 40px",
+                "backgroundColor": DARK_BG,
+                "minHeight": "100vh",
+            },
+        )
+    ],
 )
 
 # ------------------------------------------------------------------------------
 # 4. Callbacks
 # ------------------------------------------------------------------------------
 
+
 # 1. 雙向同步與輸入欄位驗證
 @app.callback(
-    [Output("start-year-input", "value"),
-     Output("end-year-input", "value"),
-     Output("year-range-slider", "value"),
-     Output("year-error-message", "children")],
-    [Input("start-year-input", "value"),
-     Input("end-year-input", "value"),
-     Input("year-range-slider", "value")]
+    [
+        Output("start-year-input", "value"),
+        Output("end-year-input", "value"),
+        Output("year-range-slider", "value"),
+        Output("year-error-message", "children"),
+    ],
+    [
+        Input("start-year-input", "value"),
+        Input("end-year-input", "value"),
+        Input("year-range-slider", "value"),
+    ],
 )
 def sync_and_validate_years(start_in, end_in, slider_val):
-    triggered_id = dash.callback_context.triggered[0]['prop_id'].split('.')[0] if dash.callback_context.triggered else None
+    triggered_id = (
+        dash.callback_context.triggered[0]["prop_id"].split(".")[0]
+        if dash.callback_context.triggered
+        else None
+    )
 
     # 當滑軌拖動時
     if triggered_id == "year-range-slider":
         real_start = min(slider_val)
         real_end = max(slider_val)
         return real_start, real_end, slider_val, ""
-    
+
     # 檢查輸入格式
     if start_in is None or end_in is None:
-        return start_in, end_in, dash.no_update, html.Span("⚠️ 請填入完整的年份數字", style={"color": "#ff5252", "fontSize": "13px", "fontWeight": "bold"})
+        return (
+            start_in,
+            end_in,
+            dash.no_update,
+            html.Span(
+                "⚠️ 請填入完整的年份數字",
+                style={"color": "#ff5252", "fontSize": "13px", "fontWeight": "bold"},
+            ),
+        )
 
     # 檢查數據範圍
-    if not (MIN_YEAR <= start_in <= MAX_YEAR and MIN_YEAR <= end_in <= MAX_YEAR):
+    if not (
+        MIN_YEAR <= start_in <= MAX_YEAR and MIN_YEAR <= end_in <= MAX_YEAR
+    ):
         err = f"⚠️ 輸入超出範圍！請輸入民國 {MIN_YEAR} 年至 {MAX_YEAR} 年之間的數字"
-        return start_in, end_in, dash.no_update, html.Span(err, style={"color": "#ff5252", "fontSize": "13px", "fontWeight": "bold"})
+        return (
+            start_in,
+            end_in,
+            dash.no_update,
+            html.Span(
+                err,
+                style={"color": "#ff5252", "fontSize": "13px", "fontWeight": "bold"},
+            ),
+        )
 
     return start_in, end_in, [start_in, end_in], ""
+
 
 # 2. 折線圖渲染
 @app.callback(
     Output("trend-line-chart", "figure"),
-    [Input("male-checklist", "value"),
-     Input("female-checklist", "value"),
-     Input("year-range-slider", "value")]
+    [
+        Input("male-checklist", "value"),
+        Input("female-checklist", "value"),
+        Input("year-range-slider", "value"),
+    ],
 )
 def update_trend_chart(male_selected, female_selected, year_range):
     selected_groups = (male_selected or []) + (female_selected or [])
-    
+
     # 未選擇項目時顯示提示
     if not selected_groups:
         fig = go.Figure()
         fig.add_annotation(
-            text="請至少勾選一種比較組合（例如：男生 - 適中）",
-            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
-            font=dict(size=18, color=TEXT_COLOR)
+            text="請至少勾選一種比較組合...",
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="#aaaaaa"),
         )
-        fig.update_layout(
-            template="plotly_dark", paper_bgcolor=DARK_BG, plot_bgcolor=CARD_BG,
-            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
-        )
-        return fig
+    else:
+        filtered_df = df[
+            (df["年度"] >= year_range[0]) & (df["年度"] <= year_range[1])
+        ]
+        fig = go.Figure()
+        for group in selected_groups:
+            parts = group.split("_")
+            gender_prefix = parts[0]
+            category = parts[1]
+            sub_df = filtered_df[
+                (filtered_df["性別"] == gender_prefix)
+                & (filtered_df["體位類別"] == category)
+            ]
+            label_name = (
+                f"{'男生' if gender_prefix == '男' else '女生'} - {category}"
+            )
+            color = COLOR_MAP.get(label_name, "#ffffff")
 
-    s_year, e_year = min(year_range), max(year_range)
-    filtered_df = df[
-        (df["性別體位組合Key"].isin(selected_groups)) &
-        (df["年度"].between(s_year, e_year))
-    ]
-    
-    fig = px.line(
-        filtered_df, x="年度", y="百分比", color="標示類別",
-        color_discrete_map=COLOR_MAP, markers=True,
-        title="歷年體位變遷比較",
-        labels={"百分比": "百分比 (%)", "標示類別": "比較族群"}
-    )
-    
+            fig.add_trace(
+                go.Scatter(
+                    x=sub_df["年度"],
+                    y=sub_df["百分比"],
+                    mode="lines+markers",
+                    name=label_name,
+                    line=dict(color=color, width=3),
+                    marker=dict(size=8),
+                )
+            )
+
     fig.update_layout(
-        template="plotly_dark",
+        title="歷年體位變遷比較",
+        xaxis_title="年度",
+        yaxis_title="百分比 (%)",
         paper_bgcolor=DARK_BG,
         plot_bgcolor=CARD_BG,
-        margin=dict(l=40, r=40, t=50, b=40),
-        xaxis=dict(tickmode='linear', dtick=1, tickfont=dict(color=TEXT_COLOR)),
-        yaxis=dict(tickfont=dict(color=TEXT_COLOR)),
-        legend=dict(font=dict(color=TEXT_COLOR)),
-        hoverlabel=dict(bgcolor="#333333", font_color="#FFFFFF", font_size=14)
+        font=dict(color=TEXT_COLOR),
+        hovermode="x unified",  # 關鍵設定：將同一年度的所有資料聚合在同一個提示框顯示
+        hoverlabel=dict(bgcolor="#2d2d2d", font_color="#ffffff", font_size=13),
+        xaxis=dict(showgrid=True, gridcolor="#333333"),
+        yaxis=dict(showgrid=True, gridcolor="#333333"),
+        legend=dict(title="比較族群", bgcolor="rgba(0,0,0,0)"),
+        margin=dict(l=40, r=40, t=60, b=40),
     )
-    
+
     return fig
 
-# ------------------------------------------------------------------------------
-# 5. 啟動服務
-# ------------------------------------------------------------------------------
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=False)
