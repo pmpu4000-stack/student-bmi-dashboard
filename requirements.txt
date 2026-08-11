@@ -1,5 +1,5 @@
 dash
+dash-mantine-components
 pandas
 plotly
-numpy
-dash_mantine_components
+gunicorn
