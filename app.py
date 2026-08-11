@@ -172,13 +172,6 @@ unique_genders = df["性別"].dropna().unique()
 gender_options = [{"label": g, "value": g} for g in sorted(list(set(unique_genders)))]
 gender_options.append({"label": "男與女共同顯示", "value": "男與女共同顯示"})
 
-category_options = [
-    {"label": "📊 全部指標總覽 (過輕/適中/過重/肥胖)", "value": "全部類別"},
-    {"label": "⚖️ 適中與肥胖比較 (男藍女紅)", "value": "適中與肥胖"}
-] + [
-    {"label": f"  • {c}", "value": c}
-    for c in df[df["指標類型"] == "BMI 體位"]["類別"].unique()
-]
 
 min_yr = int(df["年度"].min())
 max_yr = int(df["年度"].max())
