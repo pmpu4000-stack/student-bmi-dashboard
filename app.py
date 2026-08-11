@@ -326,7 +326,7 @@ app.layout = dmc.MantineProvider(
                                                 dcc.Checklist(
                                                     id="female-checklist",
                                                     options=FEMALE_OPTIONS,
-                                                    value=["女_適中"],
+                                                    value=["女_適中"],  # 修正：補上預設勾選
                                                     labelStyle={
                                                         "display": "block",
                                                         "marginBottom": "4px",
@@ -665,8 +665,8 @@ app.layout = dmc.MantineProvider(
                                         html.Div(
                                             "民國 99 年起",
                                             style={
-                                                "backgroundColor": "#000000",
-                                                "color": "#ffffff",
+                                                "backgroundColor": "#fbc02d",
+                                                "color": "#1e1e1e",
                                                 "padding": "4px 12px",
                                                 "borderRadius": "4px",
                                                 "fontWeight": "bold",
@@ -687,7 +687,7 @@ app.layout = dmc.MantineProvider(
                                         "padding": "12px 15px",
                                         "backgroundColor": "#252525",
                                         "borderRadius": "6px",
-                                        "borderLeft": "4px solid #000000",
+                                        "borderLeft": "4px solid #fbc02d",
                                         "marginBottom": "10px",
                                     },
                                 ),
@@ -758,8 +758,8 @@ app.layout = dmc.MantineProvider(
                                         html.Div(
                                             "民國 107 年起",
                                             style={
-                                                "backgroundColor": "#000000",
-                                                "color": "#ffffff",
+                                                "backgroundColor": "#7986cb",
+                                                "color": "#1e1e1e",
                                                 "padding": "4px 12px",
                                                 "borderRadius": "4px",
                                                 "fontWeight": "bold",
@@ -780,7 +780,7 @@ app.layout = dmc.MantineProvider(
                                         "padding": "12px 15px",
                                         "backgroundColor": "#252525",
                                         "borderRadius": "6px",
-                                        "borderLeft": "4px solid #000000",
+                                        "borderLeft": "4px solid #7986cb",
                                         "marginBottom": "10px",
                                     },
                                 ),
@@ -820,8 +820,8 @@ app.layout = dmc.MantineProvider(
                                         html.Div(
                                             "民國 109 年 - 112 年",
                                             style={
-                                                "backgroundColor": "#000000",
-                                                "color": "#ffffff",
+                                                "backgroundColor": "#9c27b0",
+                                                "color": "#1e1e1e",
                                                 "padding": "4px 12px",
                                                 "borderRadius": "4px",
                                                 "fontWeight": "bold",
@@ -842,7 +842,7 @@ app.layout = dmc.MantineProvider(
                                         "padding": "12px 15px",
                                         "backgroundColor": "#252525",
                                         "borderRadius": "6px",
-                                        "borderLeft": "4px solid #000000",
+                                        "borderLeft": "4px solid #9c27b0",
                                         "marginBottom": "10px",
                                     },
                                 ),
@@ -1000,7 +1000,7 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
     selected_impacts = impact_selected or []
     show_positive = "positive" in selected_impacts
     show_negative = "negative" in selected_impacts
-
+    
     fig = go.Figure()
 
     if not year_range:
@@ -1121,29 +1121,29 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
                 line_width=1, line_dash="dot", line_color="#ffffff",
             )
 
-    # --- 負向影響因素標記 (改為黑色) ---
+    # --- 負向影響因素標記 (shape="\\" 且依年度早晚密度遞增) ---
     if show_negative:
-        # 1. 智慧型手機與行動網路普及 (99年)
+        # 1. 智慧型手機與行動網路普及 (99年) - 第 1 階段（較疏）
         if min(year_range) <= 99 <= max(year_range):
             fig.add_vrect(
                 x0=98.8, x1=99.2,
-                fillcolor="#000000", opacity=0.35,
+                fillcolor="#fbc02d", opacity=0.35,
                 fillpattern=dict(shape="\\", size=22, solidity=0.3),
-                line_width=1, line_dash="dot", line_color="#000000",
+                line_width=1, line_dash="dot", line_color="#fbc02d",
             )
-        # 2. 外送平台快速崛起 (107年)
+        # 2. 外送平台快速崛起 (107年) - 第 2 階段（中等密度）
         if min(year_range) <= 107 <= max(year_range):
             fig.add_vrect(
                 x0=106.8, x1=107.2,
-                fillcolor="#000000", opacity=0.35,
+                fillcolor="#7986cb", opacity=0.35,
                 fillpattern=dict(shape="\\", size=14, solidity=0.4),
-                line_width=1, line_dash="dot", line_color="#000000",
+                line_width=1, line_dash="dot", line_color="#7986cb",
             )
-        # 3. COVID-19 疫情衝擊 (109-112年)
+        # 3. COVID-19 疫情衝擊 (109-112年) - 第 3 階段（最密）
         if max(year_range) >= 109 and min(year_range) <= 112:
             fig.add_vrect(
                 x0=108.8, x1=112.2,
-                fillcolor="#000000", opacity=0.25,
+                fillcolor="#9c27b0", opacity=0.25,
                 fillpattern=dict(shape="\\", size=8, solidity=0.5),
                 line_width=0,
             )
