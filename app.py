@@ -326,7 +326,7 @@ app.layout = dmc.MantineProvider(
                                                 dcc.Checklist(
                                                     id="female-checklist",
                                                     options=FEMALE_OPTIONS,
-                                                    value=["女_適中"],  # 修正：補上預設勾選
+                                                    value=["女_適中"],
                                                     labelStyle={
                                                         "display": "block",
                                                         "marginBottom": "4px",
@@ -1062,89 +1062,86 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
             )
         )
 
-    # --- 正向影響因素標記 ---
+    # --- 正向影響因素標記 (紅、橙、黃、綠、藍、靛、紫、白) ---
     if show_positive:
+        # 1. 校園飲品及點心販售範圍 (95年) -> 紅
         if min(year_range) <= 95 <= max(year_range):
             fig.add_vrect(
                 x0=94.8, x1=95.2,
-                fillcolor="#ff5252", opacity=0.35,
-                fillpattern=dict(shape="/"),
+                fillcolor="#ff5252", opacity=0.3,
                 line_width=1, line_dash="dot", line_color="#ff5252",
             )
+        # 2. 健康促進學校計畫全面推動 (97年) -> 橙
         if min(year_range) <= 97 <= max(year_range):
             fig.add_vrect(
                 x0=96.8, x1=97.2,
-                fillcolor="#ffa726", opacity=0.35,
-                fillpattern=dict(shape="/"),
+                fillcolor="#ffa726", opacity=0.3,
                 line_width=1, line_dash="dot", line_color="#ffa726",
             )
+        # 3. 體適能檢測全面實施 (98年) -> 黃
         if min(year_range) <= 98 <= max(year_range):
             fig.add_vrect(
                 x0=97.8, x1=98.2,
-                fillcolor="#ffee58", opacity=0.35,
-                fillpattern=dict(shape="/"),
+                fillcolor="#ffee58", opacity=0.3,
                 line_width=1, line_dash="dot", line_color="#ffee58",
             )
+        # 4. 健康成長密碼85210 (103年) -> 綠
         if min(year_range) <= 103 <= max(year_range):
             fig.add_vrect(
                 x0=102.8, x1=103.2,
-                fillcolor="#66bb6a", opacity=0.35,
-                fillpattern=dict(shape="/"),
+                fillcolor="#66bb6a", opacity=0.3,
                 line_width=1, line_dash="dot", line_color="#66bb6a",
             )
+        # 5. 三章一Q政策與午餐食材登錄 (106年) -> 藍
         if min(year_range) <= 106 <= max(year_range):
             fig.add_vrect(
                 x0=105.8, x1=106.2,
-                fillcolor="#42a5f5", opacity=0.35,
-                fillpattern=dict(shape="/"),
+                fillcolor="#42a5f5", opacity=0.3,
                 line_width=1, line_dash="dot", line_color="#42a5f5",
             )
+        # 6. 108課綱正式上路 (108年) -> 靛
         if min(year_range) <= 108 <= max(year_range):
             fig.add_vrect(
                 x0=107.8, x1=108.2,
-                fillcolor="#5c6bc0", opacity=0.35,
-                fillpattern=dict(shape="/"),
+                fillcolor="#5c6bc0", opacity=0.3,
                 line_width=1, line_dash="dot", line_color="#5c6bc0",
             )
+        # 7. 生生用平板數位學習方案 (111年) -> 紫
         if min(year_range) <= 111 <= max(year_range):
             fig.add_vrect(
                 x0=110.8, x1=111.2,
-                fillcolor="#ab47bc", opacity=0.35,
-                fillpattern=dict(shape="/"),
+                fillcolor="#ab47bc", opacity=0.3,
                 line_width=1, line_dash="dot", line_color="#ab47bc",
             )
+        # 8. 食農教育法三讀通過實施 (111年) -> 白
         if min(year_range) <= 111 <= max(year_range):
             fig.add_vrect(
                 x0=111.2, x1=111.6,
-                fillcolor="#ffffff", opacity=0.35,
-                fillpattern=dict(shape="/"),
+                fillcolor="#ffffff", opacity=0.3,
                 line_width=1, line_dash="dot", line_color="#ffffff",
             )
 
-    # --- 負向影響因素標記 (shape="\\" 且依年度早晚密度遞增) ---
+    # --- 負向影響因素標記 ---
     if show_negative:
-        # 1. 智慧型手機與行動網路普及 (99年) - 第 1 階段（較疏）
+        # 1. 智慧型手機與行動網路普及 (99年)
         if min(year_range) <= 99 <= max(year_range):
             fig.add_vrect(
                 x0=98.8, x1=99.2,
-                fillcolor="#fbc02d", opacity=0.35,
-                fillpattern=dict(shape="\\", size=22, solidity=0.3),
+                fillcolor="#fbc02d", opacity=0.3,
                 line_width=1, line_dash="dot", line_color="#fbc02d",
             )
-        # 2. 外送平台快速崛起 (107年) - 第 2 階段（中等密度）
+        # 2. 外送平台快速崛起 (107年)
         if min(year_range) <= 107 <= max(year_range):
             fig.add_vrect(
                 x0=106.8, x1=107.2,
-                fillcolor="#7986cb", opacity=0.35,
-                fillpattern=dict(shape="\\", size=14, solidity=0.4),
+                fillcolor="#7986cb", opacity=0.3,
                 line_width=1, line_dash="dot", line_color="#7986cb",
             )
-        # 3. COVID-19 疫情衝擊 (109-112年) - 第 3 階段（最密）
+        # 3. covid-19疫情衝擊 (109-112年)
         if max(year_range) >= 109 and min(year_range) <= 112:
             fig.add_vrect(
                 x0=108.8, x1=112.2,
-                fillcolor="#9c27b0", opacity=0.25,
-                fillpattern=dict(shape="\\", size=8, solidity=0.5),
+                fillcolor="#9c27b0", opacity=0.15,
                 line_width=0,
             )
 
