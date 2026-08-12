@@ -159,34 +159,28 @@ df = pd.read_csv(io.StringIO(csv_data))
 df["年度"] = df["年度"].astype(int)
 df["百分比"] = df["百分比"].astype(float)
 
-MIN_YEAR = 95
-MAX_YEAR = int(df["年度"].max())
+MIN_YEAR, MAX_YEAR = 95, int(df["年度"].max())
 ALL_YEARS = list(range(MIN_YEAR, MAX_YEAR + 1))
 
 # ============================================================================
-# 2. 常數與配置
+# 2. 事件與顏色常數
 # ============================================================================
-
-# 常數定義
-BMI_CATEGORIES = ["過輕", "適中", "過重", "肥胖"]
-COLORS = {
-    "dark_bg": "#1e1e1e",
-    "card_bg": "#2d2d2d",
-    "text": "#ffffff",
-    "male": "#29b6f6",
-    "female": "#ff4081",
-    "positive": "#4caf50",
-    "negative": "#8A2BE2",
+EVENT_MAP = {
+    95: "發布校園飲品及點心販售範圍規定",
+    97: "推動健康促進學校計畫全面",
+    98: "全面實施體適能檢測",
+    99: "智慧型手機與行動網路普及",
+    103: "推行健康成長密碼85210",
+    106: "三章一Q政策與午餐食材登錄",
+    107: "外送平台快速崛起",
+    108: "108 課綱正式上路",
+    109: "COVID-19 疫情衝擊開始",
+    110: "COVID-19 疫情期間生活型態改變",
+    111: "生生用平板方案 / 食農教育法實施",
+    112: "COVID-19 疫情解封與作息調整",
 }
 
-# 性別顏色映射
-GENDER_COLORS = {
-    "male": {"過輕": "#81d4fa", "適中": "#29b6f6", "過重": "#0288d1", "肥胖": "#01579b"},
-    "female": {"過輕": "#ff80ab", "適中": "#ff4081", "過重": "#f50057", "肥胖": "#c51162"},
-}
-
-# 合併事件與標籤（單一數據來源）
-EVENTS_DATA = [
+ALL_EVENTS = [
     (95, "positive", "民國95年發布校園飲品及點心販售範圍規定"),
     (97, "positive", "民國97年推動健康促進學校計畫全面"),
     (98, "positive", "民國98年體適能檢測全面實施"),
@@ -200,30 +194,41 @@ EVENTS_DATA = [
     (111, "positive", "民國111年食農教育法三讀通過實施"),
 ]
 
-# 預編譯事件查詢表
-EVENT_MAP = {year: text for year, _, text in EVENTS_DATA}
-POSITIVE_EVENT_YEARS = [year for year, event_type, _ in EVENTS_DATA if event_type == "positive"]
-NEGATIVE_EVENT_YEARS = [(99, 99), (107, 107), (109, 112)]
+# UI 常數
+DARK_BG = "#1e1e1e"
+CARD_BG = "#2d2d2d"
+TEXT_COLOR = "#ffffff"
+MALE_COLOR = "#29b6f6"
+FEMALE_COLOR = "#ff4081"
 
-# 性別選項
+# 性別分類選項
 GENDER_OPTIONS = {
-    "male": [{"label": cat, "value": f"男_{cat}"} for cat in BMI_CATEGORIES],
-    "female": [{"label": cat, "value": f"女_{cat}"} for cat in BMI_CATEGORIES],
+    "male": [{"label": cat, "value": f"男_{cat}"} for cat in ["過輕", "適中", "過重", "肥胖"]],
+    "female": [{"label": cat, "value": f"女_{cat}"} for cat in ["過輕", "適中", "過重", "肥胖"]],
+}
+
+# 顏色映射
+COLOR_MAP = {
+    "男生 - 過輕": "#81d4fa", "男生 - 適中": "#29b6f6", "男生 - 過重": "#0288d1", "男生 - 肥胖": "#01579b",
+    "女生 - 過輕": "#ff80ab", "女生 - 適中": "#ff4081", "女生 - 過重": "#f50057", "女生 - 肥胖": "#c51162",
+}
+
+GENDER_COLORS = {
+    "male": {"過輕": "#81d4fa", "適中": "#29b6f6", "過重": "#0288d1", "肥胖": "#01579b"},
+    "female": {"過輕": "#ff80ab", "適中": "#ff4081", "過重": "#f50057", "肥胖": "#c51162"},
 }
 
 # ============================================================================
 # 3. 樣式常數
 # ============================================================================
 INPUT_STYLE = {
-    "width": "70px", "padding": "6px", "borderRadius": "4px",
-    "border": "1px solid #555555", "backgroundColor": COLORS["card_bg"],
-    "color": COLORS["text"], "textAlign": "center",
+    "width": "70px", "padding": "6px", "borderRadius": "4px", "border": "1px solid #555555",
+    "backgroundColor": CARD_BG, "color": TEXT_COLOR, "textAlign": "center",
     "fontSize": "14px", "fontWeight": "bold",
 }
 
 CARD_STYLE = {
-    "backgroundColor": COLORS["card_bg"], "padding": "20px",
-    "borderRadius": "8px", "border": "1px solid #444",
+    "backgroundColor": CARD_BG, "padding": "20px", "borderRadius": "8px", "border": "1px solid #444",
 }
 
 LABEL_STYLE = {
@@ -233,137 +238,74 @@ LABEL_STYLE = {
 # ============================================================================
 # 4. 工具函數
 # ============================================================================
-
-def get_label_name(gender_char, category):
-    """生成標籤名稱"""
-    gender_label = "男生" if gender_char == "男" else "女生"
-    return f"{gender_label} - {category}"
-
-
-def get_color(label_name):
-    """根據標籤獲取顏色"""
-    for gender_key, categories in GENDER_COLORS.items():
-        for cat, color in categories.items():
-            if get_label_name("男" if gender_key == "male" else "女", cat) == label_name:
-                return color
-    return COLORS["text"]
-
-
 def create_event_block(year_label, event_type, event_text):
-    """生成統一的事件卡片"""
-    bg_color = COLORS["positive"] if event_type == "positive" else COLORS["negative"]
-    
+    """生成統一的事件卡片（消除重複代碼）"""
+    bg_color = "#4caf50" if event_type == "positive" else "#8A2BE2"
     return html.Div([
         html.Div(year_label, style={
-            "backgroundColor": bg_color, "color": COLORS["text"],
-            "padding": "4px 12px", "borderRadius": "4px",
-            "fontWeight": "bold", "fontSize": "13px",
+            "backgroundColor": bg_color, "color": "#ffffff", "padding": "4px 12px",
+            "borderRadius": "4px", "fontWeight": "bold", "fontSize": "13px",
             "display": "inline-block", "marginBottom": "6px",
         }),
         html.Div(event_text, style={"color": "#e0e0e0", "fontSize": "14px"}),
     ], style={
-        "padding": "12px 15px", "backgroundColor": "#252525",
-        "borderRadius": "6px", "borderLeft": f"4px solid {bg_color}",
-        "marginBottom": "10px",
+        "padding": "12px 15px", "backgroundColor": "#252525", "borderRadius": "6px",
+        "borderLeft": f"4px solid {bg_color}", "marginBottom": "10px",
     })
 
 
 def create_gender_checklist(gender_key, color):
     """生成性別選擇列表"""
-    gender_label = "男生" if gender_key == "male" else "女生"
-    
     return html.Div([
-        html.Span(
-            f"{gender_label}：",
-            style={"fontWeight": "bold", "color": color, "marginBottom": "4px", "display": "block"}
-        ),
+        html.Span(f"{'男生' if gender_key == 'male' else '女生'}：", 
+                 style={"fontWeight": "bold", "color": color, "marginBottom": "4px", "display": "block"}),
         dcc.Checklist(
-            id=f"{gender_key}-checklist",
+            id=f"{'male' if gender_key == 'male' else 'female'}-checklist",
             options=GENDER_OPTIONS[gender_key],
-            value=[f"{gender_key[0]}_{gender_key}適中"],
+            value=["男_適中" if gender_key == "male" else "女_適中"],
             labelStyle={"display": "block", "marginBottom": "4px", "color": color},
         ),
     ], style={"flex": 1, "marginRight": "10px" if gender_key == "male" else 0})
 
 
-def get_chart_layout(start_year, end_year):
-    """返回圖表通用 layout 配置"""
+def get_common_bar_layout(start_y, end_y):
+    """返回堆疊長條圖的通用 layout 配置"""
     return {
         "barmode": "stack",
-        "paper_bgcolor": COLORS["dark_bg"],
-        "plot_bgcolor": COLORS["card_bg"],
-        "font": dict(color=COLORS["text"], size=14),
+        "paper_bgcolor": DARK_BG,
+        "plot_bgcolor": CARD_BG,
+        "font": dict(color=TEXT_COLOR, size=14),
         "margin": dict(l=40, r=40, t=20, b=40),
         "xaxis": dict(
             title=dict(text="年度 (民國)", font=dict(size=16)),
-            showgrid=True, gridcolor="#333333",
-            tickmode="array", tickvals=ALL_YEARS,
-            ticktext=[str(y) for y in ALL_YEARS],
-            range=[start_year - 0.5, end_year + 0.5],
-            tickfont=dict(size=14)
+            showgrid=True, gridcolor="#333333", tickmode="array",
+            tickvals=ALL_YEARS, ticktext=[str(y) for y in ALL_YEARS],
+            range=[start_y - 0.5, end_y + 0.5], tickfont=dict(size=14)
         ),
         "yaxis": dict(
             title=dict(text="百分比 (%)", font=dict(size=16)),
-            showgrid=True, gridcolor="#333333",
-            range=[0, 105], tickfont=dict(size=14)
+            showgrid=True, gridcolor="#333333", range=[0, 105], tickfont=dict(size=14)
         ),
-        "legend": dict(
-            orientation="h", yanchor="bottom", y=1.02,
-            xanchor="right", x=1, font=dict(size=14)
-        )
+        "legend": dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=14))
     }
 
 
 def create_stacked_bar_chart(gender, year_range):
-    """統一生成堆疊長條圖"""
-    start_year, end_year = year_range
+    """統一生成堆疊長條圖（消除兩個 callback 重複代碼）"""
+    start_y, end_y = year_range
     gender_char = "男" if gender == "male" else "女"
-    
-    # 高效過濾
-    filtered_df = df[(df["年度"].between(start_year, end_year)) & (df["性別"] == gender_char)]
+    df_filtered = df[(df["年度"] >= start_y) & (df["年度"] <= end_y) & (df["性別"] == gender_char)]
     
     fig = go.Figure()
-    for category in BMI_CATEGORIES:
-        subset = filtered_df[filtered_df["體位類別"] == category]
+    for cat in ["過輕", "適中", "過重", "肥胖"]:
+        df_sub = df_filtered[df_filtered["體位類別"] == cat]
         fig.add_trace(go.Bar(
-            x=subset["年度"], y=subset["百分比"],
-            name=category, marker_color=GENDER_COLORS[gender][category]
+            x=df_sub["年度"], y=df_sub["百分比"], name=cat,
+            marker_color=GENDER_COLORS[gender][cat]
         ))
     
-    fig.update_layout(get_chart_layout(start_year, end_year))
+    fig.update_layout(get_common_bar_layout(start_y, end_y))
     return fig
-
-
-def build_tooltip_data(year, selected_groups, filtered_df, show_positive, show_negative):
-    """構建單年份的 tooltip 內容"""
-    # 收集該年各組合的數據
-    group_lines = []
-    for group in selected_groups:
-        gender, category = group.split("_")
-        gender_label = "男生" if gender == "男" else "女生"
-        match_row = filtered_df[
-            (filtered_df["年度"] == year) &
-            (filtered_df["性別"] == gender) &
-            (filtered_df["體位類別"] == category)
-        ]
-        if not match_row.empty:
-            group_lines.append(
-                f"資       料：{gender_label}-{category}-{match_row['百分比'].values[0]:.1f}%"
-            )
-    
-    # 獲取該年的事件
-    hist_items = [
-        text for y, t, text in EVENTS_DATA 
-        if y <= year and ((t == "positive" and show_positive) or (t == "negative" and show_negative))
-    ]
-    hist_str = "<br>".join(hist_items) if hist_items else "無"
-    
-    return (
-        f"<b>年       度：民國 {year} 年</b><br>"
-        f"{'<br>'.join(group_lines)}<br>"
-        f"<b>關鍵事件：</b>民國 {year} 年{EVENT_MAP.get(year, '無重大記事')}<br>"
-        f"<b>歷史事件：</b>{hist_str}"
-    )
 
 
 # ============================================================================
@@ -394,7 +336,7 @@ app.index_string = f"""
             }}
         </style>
     </head>
-    <body style="background-color: {COLORS['dark_bg']}; color: {COLORS['text']}; font-family: sans-serif;">
+    <body style="background-color: {DARK_BG}; color: {TEXT_COLOR}; font-family: sans-serif;">
         {{%app_entry%}}
         <footer>
             {{%config%}}
@@ -414,14 +356,10 @@ app.layout = dmc.MantineProvider(
         html.Div([
             # 標題區
             html.Div([
-                html.H1(
-                    "國民小學學生歷年體位趨勢報告",
-                    style={"textAlign": "center", "fontWeight": "bold", "marginBottom": "10px"}
-                ),
-                html.P(
-                    "專題研究：探討民國 95 年至 113 年國民體位統計數據之變遷、性別差異與未來預測",
-                    style={"textAlign": "center", "color": "#aaaaaa", "marginBottom": "30px"}
-                ),
+                html.H1("國民小學學生歷年體位趨勢報告",
+                       style={"textAlign": "center", "fontWeight": "bold", "marginBottom": "10px"}),
+                html.P("專題研究：探討民國 95 年至 113 年國民體位統計數據之變遷、性別差異與未來預測",
+                      style={"textAlign": "center", "color": "#aaaaaa", "marginBottom": "30px"}),
             ]),
             
             # 控制面板
@@ -430,13 +368,11 @@ app.layout = dmc.MantineProvider(
                 html.Div([
                     html.Label("選擇比較組合：", style=LABEL_STYLE),
                     html.Div([
-                        create_gender_checklist("male", COLORS["male"]),
-                        create_gender_checklist("female", COLORS["female"]),
+                        create_gender_checklist("male", MALE_COLOR),
+                        create_gender_checklist("female", FEMALE_COLOR),
                     ], style={"display": "flex", "flexDirection": "row", "flex": 1}),
-                ], style={
-                    **CARD_STYLE, "flex": "0 0 200px",
-                    "padding": "15px 20px", "display": "flex", "flexDirection": "column"
-                }),
+                ], style={**CARD_STYLE, "flex": "0 0 200px", "padding": "15px 20px", 
+                         "display": "flex", "flexDirection": "column"}),
                 
                 # 中間：影響因素選擇
                 html.Div([
@@ -444,24 +380,15 @@ app.layout = dmc.MantineProvider(
                     html.Div([
                         dcc.Checklist(
                             id="impact-checklist",
-                            options=[
-                                {"label": "政府政策", "value": "positive"},
-                                {"label": "社會事件", "value": "negative"}
-                            ],
+                            options=[{"label": "政府政策", "value": "positive"},
+                                    {"label": "社會事件", "value": "negative"}],
                             value=["positive", "negative"],
-                            labelStyle={
-                                "display": "block", "marginBottom": "12px",
-                                "color": "#e0e0e0", "fontSize": "15px", "fontWeight": "bold"
-                            },
+                            labelStyle={"display": "block", "marginBottom": "12px", "color": "#e0e0e0",
+                                      "fontSize": "15px", "fontWeight": "bold"},
                         ),
-                    ], style={
-                        "display": "flex", "flexDirection": "column",
-                        "flex": 1, "justifyContent": "center"
-                    }),
-                ], style={
-                    **CARD_STYLE, "flex": "0 0 160px",
-                    "padding": "15px 20px", "display": "flex", "flexDirection": "column"
-                }),
+                    ], style={"display": "flex", "flexDirection": "column", "flex": 1, "justifyContent": "center"}),
+                ], style={**CARD_STYLE, "flex": "0 0 160px", "padding": "15px 20px",
+                         "display": "flex", "flexDirection": "column"}),
                 
                 # 右側：年份範圍選擇
                 html.Div([
@@ -475,24 +402,16 @@ app.layout = dmc.MantineProvider(
                                 dcc.Input(id="end-year-input", type="number", step=1, value=MAX_YEAR, style=INPUT_STYLE),
                                 html.Span(" 年", style={"marginLeft": "4px"}),
                             ], style={"display": "flex", "alignItems": "center", "justifyContent": "center"}),
-                            html.Div(id="year-error-message", style={
-                                "minHeight": "20px", "marginTop": "5px", "textAlign": "center"
-                            }),
+                            html.Div(id="year-error-message", style={"minHeight": "20px", "marginTop": "5px", "textAlign": "center"}),
                         ], style={"marginBottom": "15px"}),
                         html.Div([
                             dmc.RangeSlider(
-                                id="year-range-slider",
-                                min=MIN_YEAR, max=MAX_YEAR, step=1,
-                                value=[MIN_YEAR, MAX_YEAR],
-                                minRange=0, pushOnOverlap=False,
+                                id="year-range-slider", min=MIN_YEAR, max=MAX_YEAR, step=1,
+                                value=[MIN_YEAR, MAX_YEAR], minRange=0, pushOnOverlap=False,
                                 color="violet", size="sm",
-                                marks=[{
-                                    "value": y, "label": str(y),
-                                    "style": {
-                                        "transform": "translateY(-22px) translateX(-50%)",
-                                        "fontSize": "11px", "color": "#C1C2C5"
-                                    }
-                                } for y in ALL_YEARS],
+                                marks=[{"value": y, "label": str(y), "style": {
+                                    "transform": "translateY(-22px) translateX(-50%)", "fontSize": "11px", "color": "#C1C2C5"
+                                }} for y in ALL_YEARS],
                                 styles={
                                     "root": {"padding": "0 10px", "marginTop": "0px", "marginBottom": "10px"},
                                     "track": {"backgroundColor": "#424242"},
@@ -502,10 +421,7 @@ app.layout = dmc.MantineProvider(
                             ),
                         ], style={"flex": 1, "display": "flex", "flexDirection": "column", "justifyContent": "center"}),
                     ], style={"display": "flex", "flexDirection": "column", "flex": 1, "justifyContent": "space-between"}),
-                ], style={
-                    **CARD_STYLE, "flex": 1, "padding": "20px 25px",
-                    "display": "flex", "flexDirection": "column"
-                }),
+                ], style={**CARD_STYLE, "flex": 1, "padding": "20px 25px", "display": "flex", "flexDirection": "column"}),
             ], style={"display": "flex", "gap": "20px", "alignItems": "stretch", "marginBottom": "20px"}),
             
             # 趨勢折線圖
@@ -514,61 +430,45 @@ app.layout = dmc.MantineProvider(
             # 堆疊長條圖
             html.Div([
                 html.Div([
-                    html.H3(
-                        "國民小學 - 男生體位比例堆疊圖",
-                        style={
-                            "textAlign": "center", "marginBottom": "20px",
-                            "color": COLORS["male"], "fontSize": "22px"
-                        }
-                    ),
+                    html.H3("國民小學 - 男生體位比例堆疊圖",
+                           style={"textAlign": "center", "marginBottom": "20px", "color": MALE_COLOR, "fontSize": "22px"}),
                     dcc.Graph(id="stacked-bar-chart-male", config={"displayModeBar": False})
                 ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
                 html.Div([
-                    html.H3(
-                        "國民小學 - 女生體位比例堆疊圖",
-                        style={
-                            "textAlign": "center", "marginBottom": "20px",
-                            "color": COLORS["female"], "fontSize": "22px"
-                        }
-                    ),
+                    html.H3("國民小學 - 女生體位比例堆疊圖",
+                           style={"textAlign": "center", "marginBottom": "20px", "color": FEMALE_COLOR, "fontSize": "22px"}),
                     dcc.Graph(id="stacked-bar-chart-female", config={"displayModeBar": False})
                 ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
             ], style={"display": "flex", "gap": "20px", "flexWrap": "wrap", "marginBottom": "20px"}),
             
             # 時間軸區塊
             html.Div([
-                html.H3(
-                    "政府政策與社會事件時間軸",
-                    style={
-                        "fontSize": "18px", "fontWeight": "bold",
-                        "marginBottom": "15px", "marginTop": "25px",
-                        "color": COLORS["text"]
-                    }
-                ),
+                html.H3("政府政策與社會事件時間軸",
+                       style={"fontSize": "18px", "fontWeight": "bold", "marginBottom": "15px", "marginTop": "25px", "color": "#ffffff"}),
                 html.Div([
                     create_event_block("民國 95 年起", "positive", 
-                                     "校園飲品及點心販售範圍：教育部正式訂定並嚴格規範校園內合作社及自動販賣機販售食品之營養成分、脂肪熱量比例..."),
+                                     "校園飲品及點心販售範圍：教育部正式訂定並嚴格規範校園內合作社及自動販賣機販售食品之營養成分、脂肪熱量比例與糖分上限，全面禁止高油鹽糖零食進入校園。"),
                     create_event_block("民國 97 年起", "positive",
-                                     "健康促進學校計畫全面推動：教育部全面推動健康促進學校計畫，輔導各級學校從組織運作、教學環境到社區結合..."),
+                                     "健康促進學校計畫全面推動：教育部全面推動健康促進學校計畫，輔導各級學校從組織運作、教學環境到社區結合，全面深化校園健康自主管理與均衡飲食教育。"),
                     create_event_block("民國 98 年起", "positive",
-                                     "體適能檢測全面實施：教育部全面實施規範全國中小學學生體適能檢測，透過系統化資料追蹤與體位回饋..."),
+                                     "體適能檢測全面實施：教育部全面實施規範全國中小學學生體適能檢測，透過系統化資料追蹤與體位回饋，促使各校更加重視體育課授課品質與學童心肺耐力。"),
                     create_event_block("民國 99 年起", "negative",
-                                     "智慧型手機與行動網路普及：隨著智慧型手機與行動網路快速普及，學童接觸 3C 螢幕時間大幅增加..."),
+                                     "智慧型手機與行動網路普及：隨著智慧型手機與行動網路快速普及，學童接觸 3C 螢幕時間大幅增加，戶外活動時間逐漸減少，靜態生活型態正式成形。"),
                     create_event_block("民國 103 年起", "positive",
-                                     "推行健康成長密碼85210：國民健康署強力推行「85210」健康口訣..."),
+                                     "推行健康成長密碼85210：國民健康署強力推行「85210」健康口訣（天天睡足8小時、每日5份蔬果、少於2小時螢幕時間、天天運動30分鐘、多喝白開水），落實於校園與家庭。"),
                     create_event_block("民國 106 年起", "positive",
-                                     "三章一Q政策與午餐食材登錄：行政院全面推動「三章一Q」國產溯源食材政策..."),
+                                     "三章一Q政策與午餐食材登錄：行政院全面推動「三章一Q」國產溯源食材政策，並強制校園午餐食材登錄，大幅提升學童營養午餐的食品安全與透明度。"),
                     create_event_block("民國 107 年起", "negative",
-                                     "外送平台快速崛起：各類美食外送平台全面快速崛起，高熱量、高鈉之手搖飲與速食取得便利性大增..."),
+                                     "外送平台快速崛起：各類美食外送平台全面快速崛起，高熱量, 高鈉之手搖飲與速食取得便利性大增，對學童飲食習慣產生潛在衝擊與挑戰。"),
                     create_event_block("民國 108 年起", "positive",
-                                     "108 課綱正式上路：108課綱正式上路，強調素養導向與健康與體育領域的多元選修..."),
+                                     "108 課綱正式上路：108課綱正式上路，強調素養導向與健康與體育領域的多元選修，更重視學童自主健康管理與運動習慣的養成。"),
                     create_event_block("民國 109 - 112 年", "negative",
-                                     "COVID-19 疫情衝擊：疫情爆發導致學校實施遠距教學與居家防疫，學童長期缺乏戶外運動..."),
+                                     "COVID-19 疫情衝擊：疫情爆發導致學校實施遠距教學與居家防疫，學童長期缺乏戶外運動，螢幕使用時間達到歷史新高，體位過重比例出現波動。"),
                     create_event_block("民國 111 年起", "positive",
-                                     "生生用平板方案 / 食農教育法實施：教育部推動「生生用平板」數位學習方案..."),
+                                     "生生用平板方案 / 食農教育法實施：教育部推動「生生用平板」數位學習方案，並三讀通過實施「食農教育法」，深化學童對在地飲食與營養價值的認知。"),
                 ], style={**CARD_STYLE, "padding": "20px 25px", "marginTop": "15px"}),
             ], style={"marginTop": "15px"}),
-        ], style={"padding": "20px 40px", "backgroundColor": COLORS["dark_bg"], "minHeight": "100vh"}),
+        ], style={"padding": "20px 40px", "backgroundColor": DARK_BG, "minHeight": "100vh"}),
     ],
 )
 
@@ -617,124 +517,104 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
     show_positive = "positive" in (impact_selected or [])
     show_negative = "negative" in (impact_selected or [])
     
-    year_range = year_range or [MIN_YEAR, MAX_YEAR]
-    start_year, end_year = min(year_range), max(year_range)
+    if not year_range:
+        year_range = [MIN_YEAR, MAX_YEAR]
     
+    filtered_df = df[(df["年度"] >= min(year_range)) & (df["年度"] <= max(year_range))]
     fig = go.Figure()
     
     # 無選擇時顯示提示
     if not selected_groups:
-        fig.add_annotation(
-            text="請至少勾選一種比較組合...",
-            xref="paper", yref="paper", x=0.5, y=0.5,
-            showarrow=False, font=dict(size=18, color=COLORS["text"])
-        )
-        fig.update_layout(
-            paper_bgcolor=COLORS["dark_bg"], plot_bgcolor=COLORS["card_bg"],
-            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, showline=False),
-            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, showline=False),
-            margin=dict(l=40, r=40, t=60, b=40)
-        )
+        fig.add_annotation(text="請至少勾選一種比較組合...", xref="paper", yref="paper",
+                          x=0.5, y=0.5, showarrow=False, font=dict(size=18, color="#ffffff"))
+        fig.update_layout(paper_bgcolor=DARK_BG, plot_bgcolor=CARD_BG,
+                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, showline=False),
+                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, showline=False),
+                         margin=dict(l=40, r=40, t=60, b=40))
         return fig
-    
-    # 高效過濾數據
-    filtered_df = df[df["年度"].between(start_year, end_year)]
     
     # 添加數據線
     for i, group in enumerate(selected_groups):
         gender, category = group.split("_")
-        sub_df = filtered_df[
-            (filtered_df["性別"] == gender) &
-            (filtered_df["體位類別"] == category)
-        ].copy()
-        
-        label_name = get_label_name(gender, category)
-        color = get_color(label_name)
+        sub_df = filtered_df[(filtered_df["性別"] == gender) & (filtered_df["體位類別"] == category)].copy()
+        label_name = f"{'男生' if gender == '男' else '女生'} - {category}"
+        color = COLOR_MAP.get(label_name, "#ffffff")
         
         # 第一個 trace 包含詳細 tooltip
         if i == 0:
-            customdata = [
-                build_tooltip_data(int(row["年度"]), selected_groups, filtered_df, show_positive, show_negative)
-                for _, row in sub_df.iterrows()
-            ]
-            fig.add_trace(go.Scatter(
-                x=sub_df["年度"], y=sub_df["百分比"],
-                mode="lines+markers", name=label_name,
-                line=dict(color=color, width=3), marker=dict(size=8),
-                customdata=customdata,
-                hovertemplate="<b>%{fullData.name} - %{y:.1f}%</b><extra></extra>"
-            ))
+            customdata_rows = []
+            for _, row in sub_df.iterrows():
+                yr = int(row["年度"])
+                group_lines = []
+                for g in selected_groups:
+                    gp, gp_cat = g.split("_")
+                    gp_gender = "男生" if gp == "男" else "女生"
+                    match_row = filtered_df[(filtered_df["年度"] == yr) & 
+                                          (filtered_df["性別"] == gp) & 
+                                          (filtered_df["體位類別"] == gp_cat)]
+                    if not match_row.empty:
+                        group_lines.append(f"資       料：{gp_gender}-{gp_cat}-{match_row['百分比'].values[0]:.1f}%")
+                
+                hist_items = [etxt for ey, et, etxt in ALL_EVENTS if ey <= yr and 
+                            ((et == "positive" and show_positive) or (et == "negative" and show_negative))]
+                hist_str = "<br>".join(hist_items) if hist_items else "無"
+                
+                customdata_rows.append(
+                    f"<b>年       度：民國 {yr} 年</b><br>"
+                    f"{'<br>'.join(group_lines)}<br>"
+                    f"<b>關鍵事件：</b>民國 {yr} 年{EVENT_MAP.get(yr, '無重大記事')}<br>"
+                    f"<b>歷史事件：</b>{hist_str}"
+                )
+            
+            fig.add_trace(go.Scatter(x=sub_df["年度"], y=sub_df["百分比"], mode="lines+markers",
+                                    name=label_name, line=dict(color=color, width=3), marker=dict(size=8),
+                                    customdata=customdata_rows,
+                                    hovertemplate="<b>%{fullData.name} - %{y:.1f}%</b><extra></extra>"))
         else:
-            fig.add_trace(go.Scatter(
-                x=sub_df["年度"], y=sub_df["百分比"],
-                mode="lines+markers", name=label_name,
-                line=dict(color=color, width=3), marker=dict(size=8),
-                hoverinfo="skip"
-            ))
+            fig.add_trace(go.Scatter(x=sub_df["年度"], y=sub_df["百分比"], mode="lines+markers",
+                                    name=label_name, line=dict(color=color, width=3), marker=dict(size=8),
+                                    hoverinfo="skip"))
     
-    # 添加正面政策標記
+    # 添加政策/事件標記
     if show_positive:
-        for yr in POSITIVE_EVENT_YEARS:
-            if start_year <= yr <= end_year:
-                fig.add_vrect(
-                    x0=yr - 0.2, x1=yr + 0.2,
-                    fillcolor=COLORS["positive"], opacity=0.35,
-                    line_width=1, line_dash="dot", line_color=COLORS["positive"]
-                )
+        for yr in [95, 97, 98, 103, 106, 108, 111]:
+            if min(year_range) <= yr <= max(year_range):
+                fig.add_vrect(x0=yr - 0.2, x1=yr + 0.2, fillcolor="#4caf50", opacity=0.35,
+                            line_width=1, line_dash="dot", line_color="#4caf50")
     
-    # 添加負面事件標記
     if show_negative:
-        for y_start, y_end in NEGATIVE_EVENT_YEARS:
-            if start_year <= y_end and end_year >= y_start:
-                opacity = 0.4 if y_start == y_end else 0.25
-                line_width = 1 if y_start == y_end else 0
-                fig.add_vrect(
-                    x0=y_start - 0.2, x1=y_end + 0.2,
-                    fillcolor=COLORS["negative"], opacity=opacity,
-                    line_width=line_width, line_dash="dot", line_color=COLORS["negative"]
-                )
+        if min(year_range) <= 99 <= max(year_range):
+            fig.add_vrect(x0=98.8, x1=99.2, fillcolor="#8A2BE2", opacity=0.4,
+                        line_width=1, line_dash="dot", line_color="#8A2BE2")
+        if min(year_range) <= 107 <= max(year_range):
+            fig.add_vrect(x0=106.8, x1=107.2, fillcolor="#8A2BE2", opacity=0.4,
+                        line_width=1, line_dash="dot", line_color="#8A2BE2")
+        if max(year_range) >= 109 and min(year_range) <= 112:
+            fig.add_vrect(x0=108.8, x1=112.2, fillcolor="#8A2BE2", opacity=0.25, line_width=0)
     
-    # 更新圖表配置
-    layout_config = get_chart_layout(start_year, end_year)
-    layout_config.update({
-        "title": "歷年體位變遷趨勢",
-        "xaxis_title": "年度 (民國)",
-        "yaxis_title": "百分比 (%)",
-        "paper_bgcolor": COLORS["dark_bg"],
-        "plot_bgcolor": COLORS["card_bg"],
-        "font": dict(color=COLORS["text"]),
-        "hovermode": "x unified",
-        "hoverlabel": dict(bgcolor=COLORS["card_bg"], font_color=COLORS["text"], font_size=13),
-        "xaxis": dict(
-            showgrid=True, gridcolor="#333333",
-            tickmode="array", tickvals=ALL_YEARS,
-            ticktext=[str(y) for y in ALL_YEARS],
-            range=[start_year - 0.5, end_year + 0.5]
-        ),
-        "yaxis": dict(showgrid=True, gridcolor="#333333"),
-        "legend": dict(title="比較族群", bgcolor="rgba(0,0,0,0)"),
-        "barmode": "group",
-    })
-    fig.update_layout(layout_config)
+    fig.update_layout(
+        title="歷年體位變遷趨勢", xaxis_title="年度 (民國)", yaxis_title="百分比 (%)",
+        paper_bgcolor=DARK_BG, plot_bgcolor=CARD_BG, font=dict(color=TEXT_COLOR),
+        hovermode="x unified", hoverlabel=dict(bgcolor="#2d2d2d", font_color="#ffffff", font_size=13),
+        xaxis=dict(showgrid=True, gridcolor="#333333", tickmode="array", tickvals=ALL_YEARS,
+                  ticktext=[str(y) for y in ALL_YEARS], range=[min(year_range) - 0.5, max(year_range) + 0.5]),
+        yaxis=dict(showgrid=True, gridcolor="#333333"),
+        legend=dict(title="比較族群", bgcolor="rgba(0,0,0,0)"),
+        margin=dict(l=40, r=40, t=60, b=40),
+    )
     return fig
 
 
-@app.callback(
-    Output("stacked-bar-chart-male", "figure"),
-    [Input("year-range-slider", "value")]
-)
+@app.callback(Output("stacked-bar-chart-male", "figure"), [Input("year-range-slider", "value")])
 def update_stacked_bar_male(year_range):
     """更新男生堆疊長條圖"""
-    return create_stacked_bar_chart("male", year_range or [MIN_YEAR, MAX_YEAR])
+    return create_stacked_bar_chart("male", year_range)
 
 
-@app.callback(
-    Output("stacked-bar-chart-female", "figure"),
-    [Input("year-range-slider", "value")]
-)
+@app.callback(Output("stacked-bar-chart-female", "figure"), [Input("year-range-slider", "value")])
 def update_stacked_bar_female(year_range):
     """更新女生堆疊長條圖"""
-    return create_stacked_bar_chart("female", year_range or [MIN_YEAR, MAX_YEAR])
+    return create_stacked_bar_chart("female", year_range)
 
 
 if __name__ == "__main__":
