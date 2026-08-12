@@ -165,34 +165,24 @@ ALL_YEARS = list(range(MIN_YEAR, MAX_YEAR + 1))
 # ============================================================================
 # 2. 事件與顏色常數
 # ============================================================================
-EVENT_MAP = {
-    95: "發布校園飲品及點心販售範圍規定",
-    97: "推動健康促進學校計畫全面",
-    98: "全面實施體適能檢測",
-    99: "智慧型手機與行動網路普及",
-    103: "推行健康成長密碼85210",
-    106: "三章一Q政策與午餐食材登錄",
-    107: "外送平台快速崛起",
-    108: "108 課綱正式上路",
-    109: "COVID-19 疫情衝擊開始",
-    110: "COVID-19 疫情期間生活型態改變",
-    111: "生生用平板方案 / 食農教育法實施",
-    112: "COVID-19 疫情解封與作息調整",
-}
-
+# 統一事件資料（取代原本的 EVENT_MAP + ALL_EVENTS）
 ALL_EVENTS = [
-    (95, "positive", "民國95年發布校園飲品及點心販售範圍規定"),
-    (97, "positive", "民國97年推動健康促進學校計畫全面"),
-    (98, "positive", "民國98年體適能檢測全面實施"),
-    (99, "negative", "民國99年智慧型手機與行動網路普及"),
-    (103, "positive", "民國103年推行健康成長密碼85210"),
-    (106, "positive", "民國106年三章一Q政策與午餐食材登錄"),
-    (107, "negative", "民國107年外送平台快速崛起"),
-    (108, "positive", "民國108年108課綱正式上路"),
-    (109, "negative", "民國109-112年COVID-19疫情衝擊"),
-    (111, "positive", "民國111年生生用平板數位學習方案"),
-    (111, "positive", "民國111年食農教育法三讀通過實施"),
+    {"year": 95, "type": "positive", "text": "民國95年發布校園飲品及點心販售範圍規定"},
+    {"year": 97, "type": "positive", "text": "民國97年推動健康促進學校計畫全面"},
+    {"year": 98, "type": "positive", "text": "民國98年體適能檢測全面實施"},
+    {"year": 99, "type": "negative", "text": "民國99年智慧型手機與行動網路普及"},
+    {"year": 103, "type": "positive", "text": "民國103年推行健康成長密碼85210"},
+    {"year": 106, "type": "positive", "text": "民國106年三章一Q政策與午餐食材登錄"},
+    {"year": 107, "type": "negative", "text": "民國107年外送平台快速崛起"},
+    {"year": 108, "type": "positive", "text": "民國108年108課綱正式上路"},
+    {"year": 109, "type": "negative", "text": "民國109-112年COVID-19疫情衝擊"},
+    {"year": 111, "type": "positive", "text": "民國111年生生用平板數位學習方案 / 食農教育法三讀通過實施"},
 ]
+
+# 輔助索引：year -> [events]
+EVENT_BY_YEAR = {}
+for e in ALL_EVENTS:
+    EVENT_BY_YEAR.setdefault(e["year"], []).append(e)
 
 # UI 常數
 DARK_BG = "#1e1e1e"
@@ -239,7 +229,7 @@ LABEL_STYLE = {
 # 4. 工具函數
 # ============================================================================
 def create_event_block(year_label, event_type, event_text):
-    """生成統一的事件卡片（消除重複代碼）"""
+    """生成統一的事件卡片（消除��複代碼）"""
     bg_color = "#4caf50" if event_type == "positive" else "#8A2BE2"
     return html.Div([
         html.Div(year_label, style={
@@ -337,9 +327,8 @@ def create_heatmap(gender, year_range):
         colorbar=dict(title="百分比 (%)", titleside="right", ticksuffix="%")
     ))
     
-    gender_name = "男生" if gender == "male" else "女生"
+    # 將標題留給 layout 中的 H3（與堆疊圖標題風格一致）
     fig.update_layout(
-        title=f"{gender_name}體位比例熱力圖",
         xaxis_title="年度 (民國)",
         yaxis_title="體位類別",
         paper_bgcolor=DARK_BG,
@@ -395,6 +384,12 @@ app.index_string = f"""
 # ============================================================================
 # 6. Layout 設定
 # ============================================================================
+# 先建立 timeline blocks（改為從 ALL_EVENTS 生成，避免手動重複）
+timeline_children = []
+for e in ALL_EVENTS:
+    year_label = f"民國 {e['year']} 年起"
+    timeline_children.append(create_event_block(year_label, e["type"], e["text"]))
+
 app.layout = dmc.MantineProvider(
     theme={"colorScheme": "dark"},
     children=[
@@ -486,12 +481,16 @@ app.layout = dmc.MantineProvider(
                 ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
             ], style={"display": "flex", "gap": "20px", "flexWrap": "wrap", "marginBottom": "20px"}),
             
-            # 熱力圖
+            # 熱力圖（加入與堆疊圖相同位置與風格的標題）
             html.Div([
                 html.Div([
+                    html.H3("男生體位比例熱力圖",
+                           style={"textAlign": "center", "marginBottom": "20px", "color": MALE_COLOR, "fontSize": "22px"}),
                     dcc.Graph(id="heatmap-male", config={"displayModeBar": False})
                 ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
                 html.Div([
+                    html.H3("女生體位比例熱力圖",
+                           style={"textAlign": "center", "marginBottom": "20px", "color": FEMALE_COLOR, "fontSize": "22px"}),
                     dcc.Graph(id="heatmap-female", config={"displayModeBar": False})
                 ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
             ], style={"display": "flex", "gap": "20px", "flexWrap": "wrap", "marginBottom": "20px"}),
@@ -500,28 +499,10 @@ app.layout = dmc.MantineProvider(
             html.Div([
                 html.H3("政府政策與社會事件時間軸",
                        style={"fontSize": "18px", "fontWeight": "bold", "marginBottom": "15px", "marginTop": "25px", "color": "#ffffff"}),
-                html.Div([
-                    create_event_block("民國 95 年起", "positive", 
-                                     "校園飲品及點心販售範圍：教育部正式訂定並嚴格規範校園內合作社及自動販賣機販售食品之營養成分、脂肪熱量比例…"),
-                    create_event_block("民國 97 年起", "positive",
-                                     "健康促進學校計畫全面推動：教育部全面推動健康促進學校計畫，輔導各級學校從組織運作、教學環境到社區結合，全…"),
-                    create_event_block("民國 98 年起", "positive",
-                                     "體適能檢測全面實施：教育部全面實施規範全國中小學學生體適能檢測，透過系統化資料追蹤與體位回饋，促使各校更…"),
-                    create_event_block("民國 99 年起", "negative",
-                                     "智慧型手機與行動網路普及：隨著智慧型手機與行動網路快速普及，學童接觸 3C 螢幕時間大幅增加，戶外活動時間逐漸…"),
-                    create_event_block("民國 103 年起", "positive",
-                                     "推行健康成長密碼85210：國民健康署強力推行「85210」健康口訣（天天睡足8小時、每日5份蔬果、少於2小時螢幕時間、天…"),
-                    create_event_block("民國 106 年起", "positive",
-                                     "三章一Q政策與午餐食材登錄：行政院全面推動「三章一Q」國產溯源食材政策，並強制校園午餐食材登錄，大幅提升學…"),
-                    create_event_block("民國 107 年起", "negative",
-                                     "外送平台快速崛起：各類美食外送平台全面快速崛起，高熱量, 高鈉之手搖飲與速食取得便利性大增，對學童飲食習慣…"),
-                    create_event_block("民國 108 年起", "positive",
-                                     "108 課綱正式上路：108課綱正式上路，強調素養導向與健康與體育領域的多元選修，更重視學童自主健康管理與運動習慣…"),
-                    create_event_block("民國 109 - 112 年", "negative",
-                                     "COVID-19 疫情衝擊：疫情爆發導致學校實施遠距教學與居家防疫，學童長期缺乏戶外運動，螢幕使用時間達到歷史新高，…"),
-                    create_event_block("民國 111 年起", "positive",
-                                     "生生用平板方案 / 食農教育法實施：教育部推動「生生用平板」數位學習方案，並三讀通過實施「食農教育法」，深化…"),
-                ], style={**CARD_STYLE, "padding": "20px 25px", "marginTop": "15px"}),
+                html.Div(
+                    timeline_children,
+                    style={**CARD_STYLE, "padding": "20px 25px", "marginTop": "15px"},
+                ),
             ], style={"marginTop": "15px"}),
         ], style={"padding": "20px 40px", "backgroundColor": DARK_BG, "minHeight": "100vh"}),
     ],
@@ -610,14 +591,19 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
                     if not match_row.empty:
                         group_lines.append(f"資       料：{gp_gender}-{gp_cat}-{match_row['百分比'].values[0]:.1f}%")
                 
-                hist_items = [etxt for ey, et, etxt in ALL_EVENTS if ey <= yr and 
-                            ((et == "positive" and show_positive) or (et == "negative" and show_negative))]
+                # 歷史事件（<= yr，並依使用者篩選 positive / negative）
+                hist_items = [e["text"] for e in ALL_EVENTS if e["year"] <= yr and 
+                            ((e["type"] == "positive" and show_positive) or (e["type"] == "negative" and show_negative))]
                 hist_str = "<br>".join(hist_items) if hist_items else "無"
+
+                # 取得當年度的重大記事（可能為多筆）
+                major_items = EVENT_BY_YEAR.get(yr, [])
+                major_str = "<br>".join([mi["text"] for mi in major_items]) if major_items else "無重大記事"
                 
                 customdata_rows.append(
                     f"<b>年       度：民國 {yr} 年</b><br>"
                     f"{'<br>'.join(group_lines)}<br>"
-                    f"<b>關鍵事件：</b>民國 {yr} 年{EVENT_MAP.get(yr, '無重大記事')}<br>"
+                    f"<b>關鍵事件：</b>{major_str}<br>"
                     f"<b>歷史事件：</b>{hist_str}"
                 )
             
