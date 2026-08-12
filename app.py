@@ -97,7 +97,7 @@ csv_data = """體位類別,性別,年度,百分比
 過輕,女,106,8.6
 過重,男,106,14.3
 過重,女,106,11.6
-肥胖,男,106,17
+肥胖,男,106,17,106
 肥胖,女,106,12
 適中,男,107,61.2
 適中,女,107,68.3
@@ -156,12 +156,16 @@ csv_data = """體位類別,性別,年度,百分比
 肥胖,男,113,14.2
 肥胖,女,113,10.1"""
 
+# 修正讀取資料的小錯誤（原始 CSV 裡 106 年那行有多餘 "106"，在這裡修掉）
+csv_data = csv_data.replace('\n肥胖,男,106,17,106\n', '\n肥胖,男,106,17\n')
+
 df = pd.read_csv(io.StringIO(csv_data))
 df["年度"] = df["年度"].astype(int)
 df["百分比"] = df["百分比"].astype(float)
 
 MIN_YEAR, MAX_YEAR = 95, int(df["年度"].max())
 ALL_YEARS = list(range(MIN_YEAR, MAX_YEAR + 1))
+PRED_YEARS = [114, 115, 116]
 
 # ============================================================================
 # 2. 事件與顏色常數
@@ -191,6 +195,10 @@ CARD_BG = "#2d2d2d"
 TEXT_COLOR = "#ffffff"
 MALE_COLOR = "#29b6f6"
 FEMALE_COLOR = "#ff4081"
+
+# 明亮顏色（使用使用者要求的亮綠與亮紫）
+POLICY_COLOR = "#00FF00"      # 亮綠色（政府政策）
+EVENT_COLOR = "#BF00FF"       # 亮紫色（社會事件）
 
 # 性別分類選項
 GENDER_OPTIONS = {
@@ -231,7 +239,7 @@ LABEL_STYLE = {
 # ============================================================================
 def create_event_block(year_label, event_type, event_text):
     """生成統一的事件卡片（消除重複代碼）"""
-    bg_color = "#4caf50" if event_type == "positive" else "#8A2BE2"
+    bg_color = POLICY_COLOR if event_type == "positive" else EVENT_COLOR
     return html.Div([
         html.Div(year_label, style={
             "backgroundColor": bg_color, "color": "#ffffff", "padding": "4px 12px",
@@ -459,6 +467,14 @@ app.layout = dmc.MantineProvider(
                             labelStyle={"display": "block", "marginBottom": "12px", "color": "#e0e0e0",
                                       "fontSize": "15px", "fontWeight": "bold"},
                         ),
+                        # 新增：顯示預測資料勾選
+                        dcc.Checklist(
+                            id="show-prediction",
+                            options=[{"label": "顯示預測資料 (114~116 年)", "value": "show"}],
+                            value=[],
+                            labelStyle={"display": "block", "marginTop": "8px", "color": "#e0e0e0",
+                                      "fontSize": "14px"}
+                        ),
                     ], style={"display": "flex", "flexDirection": "column", "flex": 1, "justifyContent": "center"}),
                 ], style={**CARD_STYLE, "flex": "0 0 160px", "padding": "15px 20px",
                          "display": "flex", "flexDirection": "column"}),
@@ -578,13 +594,14 @@ def sync_and_validate_years(start_in, end_in, slider_val):
 @app.callback(
     Output("trend-line-chart", "figure"),
     [Input("male-checklist", "value"), Input("female-checklist", "value"),
-     Input("impact-checklist", "value"), Input("year-range-slider", "value")],
+     Input("impact-checklist", "value"), Input("year-range-slider", "value"), Input("show-prediction", "value")],
 )
-def update_trend_chart(male_selected, female_selected, impact_selected, year_range):
-    """更新趨勢折線圖"""
+def update_trend_chart(male_selected, female_selected, impact_selected, year_range, show_prediction_val):
+    """更新趨勢折線圖，並可顯示事件標籤與線性回歸預測"""
     selected_groups = (male_selected or []) + (female_selected or [])
     show_positive = "positive" in (impact_selected or [])
     show_negative = "negative" in (impact_selected or [])
+    show_prediction = "show" in (show_prediction_val or [])
     
     if not year_range:
         year_range = [MIN_YEAR, MAX_YEAR]
@@ -624,30 +641,74 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
             customdata=customdata,
             hovertemplate="%{customdata[0]} - %{customdata[1]} - %{customdata[2]:.1f}%<extra></extra>"
         ))
-    
-    # 添加政策/事件標記
-    if show_positive:
-        for yr in [95, 97, 98, 103, 106, 108, 111]:
-            if min(year_range) <= yr <= max(year_range):
-                fig.add_vrect(x0=yr - 0.2, x1=yr + 0.2, fillcolor="#4caf50", opacity=0.35,
-                            line_width=1, line_dash="dot", line_color="#4caf50")
-    
-    if show_negative:
-        if min(year_range) <= 99 <= max(year_range):
-            fig.add_vrect(x0=98.8, x1=99.2, fillcolor="#8A2BE2", opacity=0.4,
-                        line_width=1, line_dash="dot", line_color="#8A2BE2")
-        if min(year_range) <= 107 <= max(year_range):
-            fig.add_vrect(x0=106.8, x1=107.2, fillcolor="#8A2BE2", opacity=0.4,
-                        line_width=1, line_dash="dot", line_color="#8A2BE2")
-        if max(year_range) >= 109 and min(year_range) <= 112:
-            fig.add_vrect(x0=108.8, x1=112.2, fillcolor="#8A2BE2", opacity=0.25, line_width=0)
-    
+
+    # 動態添加政策/事件標記（使用 ALL_EVENTS，並配合使用者勾選）
+    display_min, display_max = min(year_range), max(year_range)
+    for e in ALL_EVENTS:
+        yr = e["year"]
+        if not (display_min <= yr <= display_max):
+            continue
+        if e["type"] == "positive" and not show_positive:
+            continue
+        if e["type"] == "negative" and not show_negative:
+            continue
+        color = POLICY_COLOR if e["type"] == "positive" else EVENT_COLOR
+        # 短的區域標記
+        fig.add_vrect(x0=yr - 0.2, x1=yr + 0.2, fillcolor=color, opacity=0.35,
+                      line_width=1, line_dash="dot", line_color=color)
+
+    # 在對應年分上方以垂直文字顯示事件說明（使用 paper 座標，使文字不會被資料點遮蔽）
+    # 多個同年事件時，向上堆疊
+    for yr in sorted(EVENT_BY_YEAR.keys()):
+        if not (display_min <= yr <= display_max):
+            continue
+        events = EVENT_BY_YEAR.get(yr, [])
+        # 根據使用者選擇篩選事件類型
+        events = [ev for ev in events if ((ev["type"] == "positive" and show_positive) or (ev["type"] == "negative" and show_negative))]
+        for idx, ev in enumerate(events):
+            ann_color = POLICY_COLOR if ev["type"] == "positive" else EVENT_COLOR
+            # yref='paper' 並用 1.02 起始，堆疊間距 0.06
+            fig.add_annotation(x=yr, y=1.02 + idx * 0.06, xref='x', yref='paper',
+                               text=ev['text'], showarrow=False, textangle=90,
+                               font=dict(color=ann_color, size=12), align='center')
+
+    # 若使用者要求預測，對每個選中組合做線性回歸並加入預測線（114~116 年）
+    if show_prediction:
+        for group in selected_groups:
+            gender, category = group.split("_")
+            sub_df_all = df[(df["性別"] == gender) & (df["體位類別"] == category)].copy()
+            years = sub_df_all["年度"].values
+            vals = sub_df_all["百分比"].values
+            if len(years) < 2:
+                continue
+            # 線性回歸（numpy polyfit）
+            m, b = np.polyfit(years, vals, 1)
+            x_pred = np.array(PRED_YEARS)
+            y_pred = m * x_pred + b
+            label_name = f"{'男生' if gender == '男' else '女生'} - {category} (預測)"
+            color = COLOR_MAP.get(f"{'男生' if gender == '男' else '女生'} - {category}", "#ffffff")
+
+            fig.add_trace(go.Scatter(
+                x=x_pred, y=y_pred, mode='lines+markers', name=label_name,
+                line=dict(color=color, dash='dash', width=2), marker=dict(symbol='x', size=8, color=color),
+                hovertemplate=f"{label_name} - %{{x}} - %{{y:.1f}}%<extra></extra>"
+            ))
+
+    # 設定 x 軸刻度：若有預測則合併顯示預測年份
+    if show_prediction:
+        tickvals = sorted(list(set(ALL_YEARS + PRED_YEARS)))
+    else:
+        tickvals = ALL_YEARS
+
+    x_min = min(display_min, min(PRED_YEARS) if show_prediction else display_min)
+    x_max = max(display_max, max(PRED_YEARS) if show_prediction else display_max)
+
     fig.update_layout(
         title="歷年體位變遷趨勢", xaxis_title="年度 (民國)", yaxis_title="百分比 (%)",
         paper_bgcolor=DARK_BG, plot_bgcolor=CARD_BG, font=dict(color=TEXT_COLOR),
         hovermode="x unified", hoverlabel=dict(bgcolor="#2d2d2d", font_color="#ffffff", font_size=13),
-        xaxis=dict(showgrid=True, gridcolor="#333333", tickmode="array", tickvals=ALL_YEARS,
-                  ticktext=[str(y) for y in ALL_YEARS], range=[min(year_range) - 0.5, max(year_range) + 0.5]),
+        xaxis=dict(showgrid=True, gridcolor="#333333", tickmode="array", tickvals=tickvals,
+                  ticktext=[str(y) for y in tickvals], range=[x_min - 0.5, x_max + 0.5]),
         yaxis=dict(showgrid=True, gridcolor="#333333"),
         legend=dict(title="比較族群", bgcolor="rgba(0,0,0,0)"),
         margin=dict(l=40, r=40, t=60, b=40),
