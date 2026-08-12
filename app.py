@@ -169,16 +169,16 @@ ALL_YEARS = list(range(MIN_YEAR, MAX_YEAR + 1))
 # 統一事件資料（取代原本的 EVENT_MAP + ALL_EVENTS）
 ALL_EVENTS = [
 
-    {"year": 95, "type": "positive", "text": "校園飲品及點心販售範圍：教育部正式訂定並嚴格規範校園內合作社及自動販賣機販售食品之營養成分、脂肪熱量比例與糖分上限，全面禁止高油鹽糖零食進入校園。"},
-    {"year": 97, "type": "positive", "text": "健康促進學校計畫全面推動：教育部全面推動健康促進學校計畫，輔導各級學校從組織運作、教學環境到社區結合，全面深化校園健康自主管理與均衡飲食教育。"},
-    {"year": 98, "type": "positive", "text": "體適能檢測全面實施：教育部全面實施規範全國中小學學生體適能檢測，透過系統化資料追蹤與體位回饋，促使各校更加重視體育課授課品質與學童心肺耐力。"},
-    {"year": 99, "type": "negative", "text": "智慧型手機與行動網路普及：隨著智慧型手機與行動網路快速普及，學童接觸 3C 螢幕時間大幅增加，戶外活動時間逐漸減少，靜態生活型態正式成形。"},
-    {"year": 103, "type": "positive", "text": "推行健康成長密碼85210：國民健康署強力推行「85210」健康口訣（天天睡足8小時、每日5份蔬果、少於2小時螢幕時間、天天運動30分鐘、多喝白開水），落實於校園與家庭。"},
-    {"year": 106, "type": "positive", "text": "三章一Q政策與午餐食材登錄：行政院全面推動「三章一Q」國產溯源食材政策，並強制校園午餐食材登錄，大幅提升學童營養午餐的食品安全與透明度。"},
-    {"year": 107, "type": "negative", "text": "外送平台快速崛起：各類美食外送平台全面快速崛起，高熱量, 高鈉之手搖飲與速食取得便利性大增，對學童飲食習慣產生潛在衝擊與挑戰。"},
-    {"year": 108, "type": "positive", "text": "108 課綱正式上路：108課綱正式上路，強調素養導向與健康與體育領域的多元選修，更重視學童自主健康管理與運動習慣的養成。"},
-    {"year": 109, "type": "negative", "text": "COVID-19 疫情衝擊：疫情爆發導致學校實施遠距教學與居家防疫，學童長期缺乏戶外運動，螢幕使用時間達到歷史新高，體位過重比例出現波動。"},
-    {"year": 111, "type": "positive", "text": "生生用平板方案 / 食農教育法實施：教育部推動「生生用平板」數位學習方案，並三讀通過實施「食農教育法」，深化學童對在地飲食與營養價值的認知。"},
+    {"year": 95, "type": "positive", "text": "校園飲品及點心販售範圍：教育部正式訂定並嚴格規範校園內合作社及自動販賣機販售食品之營養成分、脂肪熱[...]"},
+    {"year": 97, "type": "positive", "text": "健康促進學校計畫全面推動：教育部全面推動健康促進學校計畫，輔導各級學校從組織運作、教學環境到社區結[...]"},
+    {"year": 98, "type": "positive", "text": "體適能檢測全面實施：教育部全面實施規範全國中小學學生體適能檢測，透過系統化資料追蹤與體位回饋，促使[...]"},
+    {"year": 99, "type": "negative", "text": "智慧型手機與行動網路普及：隨著智慧型手機與行動網路快速普及，學童接觸 3C 螢幕時間大幅增加，戶外活動時[...]"},
+    {"year": 103, "type": "positive", "text": "推行健康成長密碼85210：國民健康署強力推行「85210」健康口訣（天天睡足8小時、每日5份蔬果、少於2小時螢幕時[...]"},
+    {"year": 106, "type": "positive", "text": "三章一Q政策與午餐食材登錄：行政院全面推動「三章一Q」國產溯源食材政策，並強制校園午餐食材登錄，大幅[...]"},
+    {"year": 107, "type": "negative", "text": "外送平台快速崛起：各類美食外送平台全面快速崛起，高熱量, 高鈉之手搖飲與速食取得便利性大增，對學童飲[...]"},
+    {"year": 108, "type": "positive", "text": "108 課綱正式上路：108課綱正式上路，強調素養導向與健康與體育領域的多元選修，更重視學童自主健康管理與運[...]"},
+    {"year": 109, "type": "negative", "text": "COVID-19 疫情衝擊：疫情爆發導致學校實施遠距教學與居家防疫，學童長期缺乏戶外運動，螢幕使用時間達到歷史[...]"},
+    {"year": 111, "type": "positive", "text": "生生用平板方案 / 食農教育法實施：教育部推動「生生用平板」數位學習方案，並三讀通過實施「食農教育法」[...]"},
 ]
 
 # 輔助索引：year -> [events]
@@ -231,7 +231,7 @@ LABEL_STYLE = {
 # 4. 工具函數
 # ============================================================================
 def create_event_block(year_label, event_type, event_text):
-    """生成統一的事件卡片（消除��複代碼）"""
+    """生成統一的事件卡片（消除重複代碼）"""
     bg_color = "#4caf50" if event_type == "positive" else "#8A2BE2"
     return html.Div([
         html.Div(year_label, style={
@@ -597,6 +597,35 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
                          margin=dict(l=40, r=40, t=60, b=40))
         return fig
     
+    # 為每個年度預先計算所有勾選組合的資料和事件
+    hover_data_by_year = {}
+    for yr in filtered_df["年度"].unique():
+        group_lines = []
+        for g in selected_groups:
+            gp, gp_cat = g.split("_")
+            gp_gender = "男生" if gp == "男" else "女生"
+            match_row = filtered_df[(filtered_df["年度"] == yr) & 
+                                  (filtered_df["性別"] == gp) & 
+                                  (filtered_df["體位類別"] == gp_cat)]
+            if not match_row.empty:
+                group_lines.append(f"資料：{gp_gender}-{gp_cat}-{match_row['百分比'].values[0]:.1f}%")
+        
+        # 歷史事件（<= yr，並依使用者篩選 positive / negative）
+        hist_items = [e["text"] for e in ALL_EVENTS if e["year"] <= yr and 
+                    ((e["type"] == "positive" and show_positive) or (e["type"] == "negative" and show_negative))]
+        hist_str = "<br>".join(hist_items) if hist_items else "無"
+
+        # 取得當年度的重大記事（可能為多筆）
+        major_items = EVENT_BY_YEAR.get(int(yr), [])
+        major_str = "<br>".join([mi["text"] for mi in major_items]) if major_items else "無重大記事"
+        
+        hover_data_by_year[int(yr)] = (
+            f"<b>年度：民國 {int(yr)} 年</b><br>"
+            f"{'<br>'.join(group_lines)}<br>"
+            f"<b>關鍵事件：</b>{major_str}<br>"
+            f"<b>歷史事件：</b>{hist_str}"
+        )
+    
     # 添加數據線
     for i, group in enumerate(selected_groups):
         gender, category = group.split("_")
@@ -604,45 +633,19 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
         label_name = f"{'男生' if gender == '男' else '女生'} - {category}"
         color = COLOR_MAP.get(label_name, "#ffffff")
         
-        # 第一個 trace 包含詳細 tooltip
-        if i == 0:
-            customdata_rows = []
-            for _, row in sub_df.iterrows():
-                yr = int(row["年度"])
-                group_lines = []
-                for g in selected_groups:
-                    gp, gp_cat = g.split("_")
-                    gp_gender = "男生" if gp == "男" else "女生"
-                    match_row = filtered_df[(filtered_df["年度"] == yr) & 
-                                          (filtered_df["性別"] == gp) & 
-                                          (filtered_df["體位類別"] == gp_cat)]
-                    if not match_row.empty:
-                        group_lines.append(f"資       料：{gp_gender}-{gp_cat}-{match_row['百分比'].values[0]:.1f}%")
-                
-                # 歷史事件（<= yr，並依使用者篩選 positive / negative）
-                hist_items = [e["text"] for e in ALL_EVENTS if e["year"] <= yr and 
-                            ((e["type"] == "positive" and show_positive) or (e["type"] == "negative" and show_negative))]
-                hist_str = "<br>".join(hist_items) if hist_items else "無"
-
-                # 取得當年度的重大記事（可能為多筆）
-                major_items = EVENT_BY_YEAR.get(yr, [])
-                major_str = "<br>".join([mi["text"] for mi in major_items]) if major_items else "無重大記事"
-                
-                customdata_rows.append(
-                    f"<b>年       度：民國 {yr} 年</b><br>"
-                    f"{'<br>'.join(group_lines)}<br>"
-                    f"<b>關鍵事件：</b>{major_str}<br>"
-                    f"<b>歷史事件：</b>{hist_str}"
-                )
-            
-            fig.add_trace(go.Scatter(x=sub_df["年度"], y=sub_df["百分比"], mode="lines+markers",
-                                    name=label_name, line=dict(color=color, width=3), marker=dict(size=8),
-                                    customdata=customdata_rows,
-                                    hovertemplate="<b>%{fullData.name} - %{y:.1f}%</b><extra></extra>"))
-        else:
-            fig.add_trace(go.Scatter(x=sub_df["年度"], y=sub_df["百分比"], mode="lines+markers",
-                                    name=label_name, line=dict(color=color, width=3), marker=dict(size=8),
-                                    hoverinfo="skip"))
+        # 為所有 trace 都加上 customdata（含統一的 hover 資訊）
+        customdata_rows = [hover_data_by_year.get(int(row["年度"]), "") for _, row in sub_df.iterrows()]
+        
+        fig.add_trace(go.Scatter(
+            x=sub_df["年度"], 
+            y=sub_df["百分比"], 
+            mode="lines+markers",
+            name=label_name, 
+            line=dict(color=color, width=3), 
+            marker=dict(size=8),
+            customdata=customdata_rows,
+            hovertemplate="<extra></extra>"
+        ))
     
     # 添加政策/事件標記
     if show_positive:
