@@ -453,11 +453,12 @@ app.layout = dmc.MantineProvider(
                     html.Div([
                         dcc.Checklist(
                             id="impact-checklist",
-                            options=[{"label": "政府政策", "value": "positive"},
-                                    {"label": "社會事件", "value": "negative"}],
+                            options=[
+                                {"label": html.Span("政府政策", style={"color": "#4caf50", "fontWeight": "bold"}), "value": "positive"},
+                                {"label": html.Span("社會事件", style={"color": "#8A2BE2", "fontWeight": "bold"}), "value": "negative"},
+                            ],
                             value=["positive", "negative"],
-                            labelStyle={"display": "block", "marginBottom": "12px", "color": "#e0e0e0",
-                                      "fontSize": "15px", "fontWeight": "bold"},
+                            labelStyle={"display": "block", "marginBottom": "12px", "fontSize": "15px", "fontWeight": "bold"},
                         ),
                     ], style={"display": "flex", "flexDirection": "column", "flex": 1, "justifyContent": "center"}),
                 ], style={**CARD_STYLE, "flex": "0 0 160px", "padding": "15px 20px",
@@ -601,84 +602,5 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
                          yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, showline=False),
                          margin=dict(l=40, r=40, t=60, b=40))
         return fig
-    
-    # 為每個選中的組合準備資料
-    for group in selected_groups:
-        gender, category = group.split("_")
-        sub_df = filtered_df[(filtered_df["性別"] == gender) & (filtered_df["體位類別"] == category)].copy()
-        label_name = f"{'男生' if gender == '男' else '女生'} - {category}"
-        color = COLOR_MAP.get(label_name, "#ffffff")
-        
-        # 建立 hover 資訊，包含性別、體位、比例（橫向呈現）
-        gender_display = "男生" if gender == "男" else "女生"
-        # customdata 為 2D list，每列為 [性別, 體位, 百分比]
-        customdata = [[gender_display, category, float(pct)] for pct in sub_df["百分比"].values]
-        
-        fig.add_trace(go.Scatter(
-            x=sub_df["年度"], 
-            y=sub_df["百分比"], 
-            mode="lines+markers",
-            name=label_name, 
-            line=dict(color=color, width=3), 
-            marker=dict(size=8),
-            customdata=customdata,
-            hovertemplate="%{customdata[0]} - %{customdata[1]} - %{customdata[2]:.1f}%<extra></extra>"
-        ))
-    
-    # 添加政策/事件標記
-    if show_positive:
-        for yr in [95, 97, 98, 103, 106, 108, 111]:
-            if min(year_range) <= yr <= max(year_range):
-                fig.add_vrect(x0=yr - 0.2, x1=yr + 0.2, fillcolor="#4caf50", opacity=0.35,
-                            line_width=1, line_dash="dot", line_color="#4caf50")
-    
-    if show_negative:
-        if min(year_range) <= 99 <= max(year_range):
-            fig.add_vrect(x0=98.8, x1=99.2, fillcolor="#8A2BE2", opacity=0.4,
-                        line_width=1, line_dash="dot", line_color="#8A2BE2")
-        if min(year_range) <= 107 <= max(year_range):
-            fig.add_vrect(x0=106.8, x1=107.2, fillcolor="#8A2BE2", opacity=0.4,
-                        line_width=1, line_dash="dot", line_color="#8A2BE2")
-        if max(year_range) >= 109 and min(year_range) <= 112:
-            fig.add_vrect(x0=108.8, x1=112.2, fillcolor="#8A2BE2", opacity=0.25, line_width=0)
-    
-    fig.update_layout(
-        title="歷年體位變遷趨勢", xaxis_title="年度 (民國)", yaxis_title="百分比 (%)",
-        paper_bgcolor=DARK_BG, plot_bgcolor=CARD_BG, font=dict(color=TEXT_COLOR),
-        hovermode="x unified", hoverlabel=dict(bgcolor="#2d2d2d", font_color="#ffffff", font_size=13),
-        xaxis=dict(showgrid=True, gridcolor="#333333", tickmode="array", tickvals=ALL_YEARS,
-                  ticktext=[str(y) for y in ALL_YEARS], range=[min(year_range) - 0.5, max(year_range) + 0.5]),
-        yaxis=dict(showgrid=True, gridcolor="#333333"),
-        legend=dict(title="比較族群", bgcolor="rgba(0,0,0,0)"),
-        margin=dict(l=40, r=40, t=60, b=40),
-    )
-    return fig
 
-
-@app.callback(Output("stacked-bar-chart-male", "figure"), [Input("year-range-slider", "value")])
-def update_stacked_bar_male(year_range):
-    """更新男生堆疊長條圖"""
-    return create_stacked_bar_chart("male", year_range)
-
-
-@app.callback(Output("stacked-bar-chart-female", "figure"), [Input("year-range-slider", "value")])
-def update_stacked_bar_female(year_range):
-    """更新女生堆疊長條圖"""
-    return create_stacked_bar_chart("female", year_range)
-
-
-@app.callback(Output("heatmap-male", "figure"), [Input("year-range-slider", "value")])
-def update_heatmap_male(year_range):
-    """更新男生熱力圖"""
-    return create_heatmap("male", year_range)
-
-
-@app.callback(Output("heatmap-female", "figure"), [Input("year-range-slider", "value")])
-def update_heatmap_female(year_range):
-    """更新女生熱力圖"""
-    return create_heatmap("female", year_range)
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+[...]
