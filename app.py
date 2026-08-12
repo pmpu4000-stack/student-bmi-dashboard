@@ -464,7 +464,7 @@ app.layout = dmc.MantineProvider(
                             options=[{"label": "政府政策", "value": "positive"},
                                     {"label": "社會事件", "value": "negative"}],
                             value=["positive", "negative"],
-                            labelStyle={"display": "block", "marginBottom": "12px", "color": "#e0e0e0",
+                            labelStyle={"display": "block", "marginBottom": "12px",
                                       "fontSize": "15px", "fontWeight": "bold"},
                         ),
                         # 新增：顯示預測資料勾選
