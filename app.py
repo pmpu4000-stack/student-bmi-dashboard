@@ -963,7 +963,6 @@ app.layout = dmc.MantineProvider(
 # 4. Callbacks
 # ------------------------------------------------------------------------------
 
-
 @app.callback(
     [
         Output("start-year-input", "value"),
@@ -1145,7 +1144,10 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
                     line=dict(color=color, width=3),
                     marker=dict(size=8),
                     customdata=customdata_rows,
-                    hovertemplate="%{customdata}<extra></extra>",
+                    hovertemplate=(
+                        "<b>%{fullData.name} - %{y:.1f}%</b>"
+                        "<extra></extra>"
+                    )
                 )
             )
         else:
