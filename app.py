@@ -168,7 +168,6 @@ ALL_YEARS = list(range(MIN_YEAR, MAX_YEAR + 1))
 # ============================================================================
 # 統一事件資料（取代原本的 EVENT_MAP + ALL_EVENTS）
 ALL_EVENTS = [
-
     {"year": 95, "type": "positive", "text": "校園飲品及點心販售範圍"}
     {"year": 97, "type": "positive", "text": "健康促進學校計畫全面推動"}
     {"year": 98, "type": "positive", "text": "體適能檢測全面實施"}
