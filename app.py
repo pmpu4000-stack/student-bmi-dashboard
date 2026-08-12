@@ -475,12 +475,12 @@ app.layout = dmc.MantineProvider(
             # 堆疊長條圖
             html.Div([
                 html.Div([
-                    html.H3("國民小學 - 男生體位比例堆疊圖",
+                    html.H3("男生體位比例堆疊圖",
                            style={"textAlign": "center", "marginBottom": "20px", "color": MALE_COLOR, "fontSize": "22px"}),
                     dcc.Graph(id="stacked-bar-chart-male", config={"displayModeBar": False})
                 ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
                 html.Div([
-                    html.H3("國民小學 - 女生體位比例堆疊圖",
+                    html.H3("女生體位比例堆疊圖",
                            style={"textAlign": "center", "marginBottom": "20px", "color": FEMALE_COLOR, "fontSize": "22px"}),
                     dcc.Graph(id="stacked-bar-chart-female", config={"displayModeBar": False})
                 ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
