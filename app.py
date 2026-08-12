@@ -5,6 +5,7 @@ from dash import dcc, html, Input, Output
 import dash_mantine_components as dmc
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
 
 # ============================================================================
 # 1. 資料與常數定義
@@ -167,16 +168,16 @@ ALL_YEARS = list(range(MIN_YEAR, MAX_YEAR + 1))
 # ============================================================================
 # 統一事件資料（取代原本的 EVENT_MAP + ALL_EVENTS）
 ALL_EVENTS = [
-    {"year": 95, "type": "positive", "text": "校園飲品及點心販售範圍：教育部正式訂定並嚴格規範校園內合作社及自動販賣機販售食品之營養成分、脂肪熱量比例與糖分上限，全面禁止高油鹽糖零食進入校園。"},
-    {"year": 97, "type": "positive", "text": "健康促進學校計畫全面推動：教育部全面推動健康促進學校計畫，輔導各級學校從組織運作、教學環境到社區結合，全面深化校園健康自主管理與均衡飲食教育。"},
-    {"year": 98, "type": "positive", "text": "體適能檢測全面實施：教育部全面實施規範全國中小學學生體適能檢測，透過系統化資料追蹤與體位回饋，促使各校更加重視體育課授課品質與學童心肺耐力。"},
-    {"year": 99, "type": "negative", "text": "智慧型手機與行動網路普及：隨著智慧型手機與行動網路快速普及，學童接觸 3C 螢幕時間大幅增加，戶外活動時間逐漸減少，靜態生活型態正式成形。"},
-    {"year": 103, "type": "positive", "text": "推行健康成長密碼85210：國民健康署強力推行「85210」健康口訣（天天睡足8小時、每日5份蔬果、少於2小時螢幕時間、天天運動30分鐘、多喝白開水），落實於校園與家庭。"},
-    {"year": 106, "type": "positive", "text": "三章一Q政策與午餐食材登錄：行政院全面推動「三章一Q」國產溯源食材政策，並強制校園午餐食材登錄，大幅提升學童營養午餐的食品安全與透明度。"},
-    {"year": 107, "type": "negative", "text": "外送平台快速崛起：各類美食外送平台全面快速崛起，高熱量, 高鈉之手搖飲與速食取得便利性大增，對學童飲食習慣產生潛在衝擊與挑戰。"},
-    {"year": 108, "type": "positive", "text": "108 課綱正式上路：108課綱正式上路，強調素養導向與健康與體育領域的多元選修，更重視學童自主健康管理與運動習慣的養成。"},
-    {"year": 109, "type": "negative", "text": "COVID-19 疫情衝擊：疫情爆發導致學校實施遠距教學與居家防疫，學童長期缺乏戶外運動，螢幕使用時間達到歷史新高，體位過重比例出現波動。"},
-    {"year": 111, "type": "positive", "text": "生生用平板方案 / 食農教育法實施：教育部推動「生生用平板」數位學習方案，並三讀通過實施「食農教育法」，深化學童對在地飲食與營養價值的認知。"},
+    {"year": 95, "type": "positive", "text": "校園飲品及點心販售範圍：教育部正式訂定並嚴格規範校園內合作社及自動販賣機販售食品之營養成分、脂肪熱量比�[...]"},
+    {"year": 97, "type": "positive", "text": "健康促進學校計畫全面推動：教育部全面推動健康促進學校計畫，輔導各級學校從組織運作、教學環境到社區結合，�[...]"},
+    {"year": 98, "type": "positive", "text": "體適能檢測全面實施：教育部全面實施規範全國中小學學生體適能檢測，透過系統化資料追蹤與體位回饋，促使各校�[...]"},
+    {"year": 99, "type": "negative", "text": "智慧型手機與行動網路普及：隨著智慧型手機與行動網路快速普及，學童接觸 3C 螢幕時間大幅增加，戶外活動時間逐[...]"},
+    {"year": 103, "type": "positive", "text": "推行健康成長密碼85210：國民健康署強力推行「85210」健康口訣（天天睡足8小時、每日5份蔬果、少於2小時螢幕時間��[...]"},
+    {"year": 106, "type": "positive", "text": "三章一Q政策與午餐食材登錄：行政院全面推動「三章一Q」國產溯源食材政策，並強制校園午餐食材登錄，大幅提升�[...]"},
+    {"year": 107, "type": "negative", "text": "外送平台快速崛起：各類美食外送平台全面快速崛起，高熱量, 高鈉之手搖飲與速食取得便利性大增，對學童飲食習�[...]"},
+    {"year": 108, "type": "positive", "text": "108 課綱正式上路：108課綱正式上路，強調素養導向與健康與體育領域的多元選修，更重視學童自主健康管理與運動��[...]"},
+    {"year": 109, "type": "negative", "text": "COVID-19 疫情衝擊：疫情爆發導致學校實施遠距教學與居家防疫，學童長期缺乏戶外運動，螢幕使用時間達到歷史新高[...]"},
+    {"year": 111, "type": "positive", "text": "生生用平板方案 / 食農教育法實施：教育部推動「生生用平板」數位學習方案，並三讀通過實施「食農教育法」，深[...]" }
 ]
 
 # 輔助索引：year -> [events]
@@ -299,35 +300,61 @@ def create_stacked_bar_chart(gender, year_range):
 
 
 def create_heatmap(gender, year_range):
-    """生成性別的熱力圖"""
-    start_y, end_y = year_range
-    gender_char = "男" if gender == "male" else "女"
-    
-    # 準備熱力圖數據
-    df_filtered = df[(df["年度"] >= start_y) & (df["年度"] <= end_y) & (df["性別"] == gender_char)]
-    
-    # 創建 pivot table (行=體位類別, 列=年度)
-    pivot_data = df_filtered.pivot(index="體位類別", columns="年度", values="百分比")
-    
-    # 確保行的順序
-    pivot_data = pivot_data.reindex(["過輕", "適中", "過重", "肥胖"])
-    
-    # 決定顏色方案
-    if gender == "male":
-        colorscale = "Blues"
+    """生成性別的熱力圖（更穩定的欄/列對齊與空資料處理）"""
+    # 安全處理 year_range
+    if not year_range:
+        start_y, end_y = MIN_YEAR, MAX_YEAR
     else:
-        colorscale = "Reds"
-    
+        start_y, end_y = int(min(year_range)), int(max(year_range))
+    gender_char = "男" if gender == "male" else "女"
+
+    # 篩選資料
+    df_filtered = df[(df["年度"] >= start_y) & (df["年度"] <= end_y) & (df["性別"] == gender_char)]
+
+    # 建立完整的年度索引（確保每年都有欄位）
+    years = list(range(start_y, end_y + 1))
+
+    # pivot 並強制 reindex（行順序固定、欄為完整年度序列）
+    pivot_data = df_filtered.pivot(index="體位類別", columns="年度", values="百分比")
+    pivot_data = pivot_data.reindex(index=["過輕", "適中", "過重", "肥胖"], columns=years)
+
+    # 若完全沒有資料，回傳帶提示的空圖（避免空 heatmap）
+    if pivot_data.isnull().all().all():
+        fig = go.Figure()
+        fig.add_annotation(
+            text="沒有符合條件的資料可呈現",
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+            font=dict(size=16, color=TEXT_COLOR)
+        )
+        fig.update_layout(
+            paper_bgcolor=DARK_BG, plot_bgcolor=CARD_BG,
+            margin=dict(l=80, r=40, t=40, b=40),
+            xaxis=dict(showgrid=False),
+            yaxis=dict(showgrid=False),
+            font=dict(color=TEXT_COLOR)
+        )
+        return fig
+
+    # 將 x 軸轉為字串，並把 NaN 保留（Plotly 能處理 NaN，不會顯示格子）
+    x_vals = [str(y) for y in pivot_data.columns]
+    y_vals = pivot_data.index.tolist()
+
+    # 轉換 z 資料，讓 NaN 保持為 np.nan（或 None），以避免不一致導致 Plotly 錯誤
+    raw_z = pivot_data.values
+    # 使用 float 並保留 np.nan
+    z_vals = np.array(raw_z, dtype=float)
+
+    colorscale = "Blues" if gender == "male" else "Reds"
+
     fig = go.Figure(data=go.Heatmap(
-        z=pivot_data.values,
-        x=pivot_data.columns,
-        y=pivot_data.index,
+        z=z_vals,
+        x=x_vals,
+        y=y_vals,
         colorscale=colorscale,
         hovertemplate="年度: %{x}<br>體位: %{y}<br>百分比: %{z:.1f}%<extra></extra>",
         colorbar=dict(title="百分比 (%)", titleside="right", ticksuffix="%")
     ))
-    
-    # 將標題留給 layout 中的 H3（與堆疊圖標題風格一致）
+
     fig.update_layout(
         xaxis_title="年度 (民國)",
         yaxis_title="體位類別",
@@ -335,10 +362,10 @@ def create_heatmap(gender, year_range):
         plot_bgcolor=CARD_BG,
         font=dict(color=TEXT_COLOR, size=14),
         margin=dict(l=80, r=40, t=40, b=40),
-        xaxis=dict(showgrid=False, tickmode="array", tickvals=pivot_data.columns),
+        xaxis=dict(showgrid=False, tickmode="array", tickvals=x_vals, ticktext=x_vals),
         yaxis=dict(showgrid=False),
     )
-    
+
     return fig
 
 
