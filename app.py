@@ -291,14 +291,6 @@ app.layout = dmc.MantineProvider(
                                 "marginBottom": "30px",
                             },
                         ),
-                        html.H2(
-                            "體位結構變遷折線圖",
-                            style={
-                                "textAlign": "center",
-                                "fontWeight": "bold",
-                                "marginBottom": "20px",
-                            },
-                        ),
                     ]
                 ),
                 # 上方控制面板外層容器
@@ -622,17 +614,17 @@ app.layout = dmc.MantineProvider(
                         ),
                     ]
                 ),
-                # 歷史政策與關鍵事件時間軸專區
+                # 政府政策與社會事件時間軸專區
                 html.Div(
                     [
                         html.H3(
-                            "📚 歷史政策與關鍵事件時間軸",
+                            "政府政策與社會事件時間軸",
                             style={
                                 "fontSize": "18px",
                                 "fontWeight": "bold",
                                 "marginBottom": "15px",
                                 "marginTop": "25px",
-                                "color": "#4caf50",
+                                "color": "#ffffff",
                             },
                         ),
                         html.Div(
@@ -1208,7 +1200,7 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
         paper_bgcolor=DARK_BG,
         plot_bgcolor=CARD_BG,
         font=dict(color=TEXT_COLOR),
-        hovermode="closest",
+        hovermode="x unified",
         hoverlabel=dict(bgcolor="#2d2d2d", font_color="#ffffff", font_size=13),
         xaxis=dict(
             showgrid=True,
