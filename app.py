@@ -308,6 +308,51 @@ def create_stacked_bar_chart(gender, year_range):
     return fig
 
 
+def create_heatmap(gender, year_range):
+    """生成性別的熱力圖"""
+    start_y, end_y = year_range
+    gender_char = "男" if gender == "male" else "女"
+    
+    # 準備熱力圖數據
+    df_filtered = df[(df["年度"] >= start_y) & (df["年度"] <= end_y) & (df["性別"] == gender_char)]
+    
+    # 創建 pivot table (行=體位類別, 列=年度)
+    pivot_data = df_filtered.pivot(index="體位類別", columns="年度", values="百分比")
+    
+    # 確保行的順序
+    pivot_data = pivot_data.reindex(["過輕", "適中", "過重", "肥胖"])
+    
+    # 決定顏色方案
+    if gender == "male":
+        colorscale = "Blues"
+    else:
+        colorscale = "Reds"
+    
+    fig = go.Figure(data=go.Heatmap(
+        z=pivot_data.values,
+        x=pivot_data.columns,
+        y=pivot_data.index,
+        colorscale=colorscale,
+        hovertemplate="年度: %{x}<br>體位: %{y}<br>百分比: %{z:.1f}%<extra></extra>",
+        colorbar=dict(title="百分比 (%)", titleside="right", ticksuffix="%")
+    ))
+    
+    gender_name = "男生" if gender == "male" else "女生"
+    fig.update_layout(
+        title=f"{gender_name}體位比例熱力圖",
+        xaxis_title="年度 (民國)",
+        yaxis_title="體位類別",
+        paper_bgcolor=DARK_BG,
+        plot_bgcolor=CARD_BG,
+        font=dict(color=TEXT_COLOR, size=14),
+        margin=dict(l=80, r=40, t=40, b=40),
+        xaxis=dict(showgrid=False, tickmode="array", tickvals=pivot_data.columns),
+        yaxis=dict(showgrid=False),
+    )
+    
+    return fig
+
+
 # ============================================================================
 # 5. Dash App 初始化
 # ============================================================================
@@ -441,31 +486,41 @@ app.layout = dmc.MantineProvider(
                 ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
             ], style={"display": "flex", "gap": "20px", "flexWrap": "wrap", "marginBottom": "20px"}),
             
+            # 熱力圖
+            html.Div([
+                html.Div([
+                    dcc.Graph(id="heatmap-male", config={"displayModeBar": False})
+                ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
+                html.Div([
+                    dcc.Graph(id="heatmap-female", config={"displayModeBar": False})
+                ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
+            ], style={"display": "flex", "gap": "20px", "flexWrap": "wrap", "marginBottom": "20px"}),
+            
             # 時間軸區塊
             html.Div([
                 html.H3("政府政策與社會事件時間軸",
                        style={"fontSize": "18px", "fontWeight": "bold", "marginBottom": "15px", "marginTop": "25px", "color": "#ffffff"}),
                 html.Div([
                     create_event_block("民國 95 年起", "positive", 
-                                     "校園飲品及點心販售範圍：教育部正式訂定並嚴格規範校園內合作社及自動販賣機販售食品之營養成分、脂肪熱量比例與糖分上限，全面禁止高油鹽糖零食進入校園。"),
+                                     "校園飲品及點心販售範圍：教育部正式訂定並嚴格規範校園內合作社及自動販賣機販售食品之營養成分、脂肪熱量比例…"),
                     create_event_block("民國 97 年起", "positive",
-                                     "健康促進學校計畫全面推動：教育部全面推動健康促進學校計畫，輔導各級學校從組織運作、教學環境到社區結合，全面深化校園健康自主管理與均衡飲食教育。"),
+                                     "健康促進學校計畫全面推動：教育部全面推動健康促進學校計畫，輔導各級學校從組織運作、教學環境到社區結合，全…"),
                     create_event_block("民國 98 年起", "positive",
-                                     "體適能檢測全面實施：教育部全面實施規範全國中小學學生體適能檢測，透過系統化資料追蹤與體位回饋，促使各校更加重視體育課授課品質與學童心肺耐力。"),
+                                     "體適能檢測全面實施：教育部全面實施規範全國中小學學生體適能檢測，透過系統化資料追蹤與體位回饋，促使各校更…"),
                     create_event_block("民國 99 年起", "negative",
-                                     "智慧型手機與行動網路普及：隨著智慧型手機與行動網路快速普及，學童接觸 3C 螢幕時間大幅增加，戶外活動時間逐漸減少，靜態生活型態正式成形。"),
+                                     "智慧型手機與行動網路普及：隨著智慧型手機與行動網路快速普及，學童接觸 3C 螢幕時間大幅增加，戶外活動時間逐漸…"),
                     create_event_block("民國 103 年起", "positive",
-                                     "推行健康成長密碼85210：國民健康署強力推行「85210」健康口訣（天天睡足8小時、每日5份蔬果、少於2小時螢幕時間、天天運動30分鐘、多喝白開水），落實於校園與家庭。"),
+                                     "推行健康成長密碼85210：國民健康署強力推行「85210」健康口訣（天天睡足8小時、每日5份蔬果、少於2小時螢幕時間、天…"),
                     create_event_block("民國 106 年起", "positive",
-                                     "三章一Q政策與午餐食材登錄：行政院全面推動「三章一Q」國產溯源食材政策，並強制校園午餐食材登錄，大幅提升學童營養午餐的食品安全與透明度。"),
+                                     "三章一Q政策與午餐食材登錄：行政院全面推動「三章一Q」國產溯源食材政策，並強制校園午餐食材登錄，大幅提升學…"),
                     create_event_block("民國 107 年起", "negative",
-                                     "外送平台快速崛起：各類美食外送平台全面快速崛起，高熱量, 高鈉之手搖飲與速食取得便利性大增，對學童飲食習慣產生潛在衝擊與挑戰。"),
+                                     "外送平台快速崛起：各類美食外送平台全面快速崛起，高熱量, 高鈉之手搖飲與速食取得便利性大增，對學童飲食習慣…"),
                     create_event_block("民國 108 年起", "positive",
-                                     "108 課綱正式上路：108課綱正式上路，強調素養導向與健康與體育領域的多元選修，更重視學童自主健康管理與運動習慣的養成。"),
+                                     "108 課綱正式上路：108課綱正式上路，強調素養導向與健康與體育領域的多元選修，更重視學童自主健康管理與運動習慣…"),
                     create_event_block("民國 109 - 112 年", "negative",
-                                     "COVID-19 疫情衝擊：疫情爆發導致學校實施遠距教學與居家防疫，學童長期缺乏戶外運動，螢幕使用時間達到歷史新高，體位過重比例出現波動。"),
+                                     "COVID-19 疫情衝擊：疫情爆發導致學校實施遠距教學與居家防疫，學童長期缺乏戶外運動，螢幕使用時間達到歷史新高，…"),
                     create_event_block("民國 111 年起", "positive",
-                                     "生生用平板方案 / 食農教育法實施：教育部推動「生生用平板」數位學習方案，並三讀通過實施「食農教育法」，深化學童對在地飲食與營養價值的認知。"),
+                                     "生生用平板方案 / 食農教育法實施：教育部推動「生生用平板」數位學習方案，並三讀通過實施「食農教育法」，深化…"),
                 ], style={**CARD_STYLE, "padding": "20px 25px", "marginTop": "15px"}),
             ], style={"marginTop": "15px"}),
         ], style={"padding": "20px 40px", "backgroundColor": DARK_BG, "minHeight": "100vh"}),
@@ -615,6 +670,18 @@ def update_stacked_bar_male(year_range):
 def update_stacked_bar_female(year_range):
     """更新女生堆疊長條圖"""
     return create_stacked_bar_chart("female", year_range)
+
+
+@app.callback(Output("heatmap-male", "figure"), [Input("year-range-slider", "value")])
+def update_heatmap_male(year_range):
+    """更新男生熱力圖"""
+    return create_heatmap("male", year_range)
+
+
+@app.callback(Output("heatmap-female", "figure"), [Input("year-range-slider", "value")])
+def update_heatmap_female(year_range):
+    """更新女生熱力圖"""
+    return create_heatmap("female", year_range)
 
 
 if __name__ == "__main__":
