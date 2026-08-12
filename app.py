@@ -346,12 +346,18 @@ def create_heatmap(gender, year_range):
 
     colorscale = "Blues" if gender == "male" else "Reds"
 
+    # 讓 hover 顯示為 橫向：性別 - 體位 - 百分比
+    gender_display = "男生" if gender == "male" else "女生"
+    # customdata 必須與 z 形狀一致，填入性別字串
+    customdata = np.full(z_vals.shape, gender_display, dtype=object)
+
     fig = go.Figure(data=go.Heatmap(
         z=z_vals,
         x=x_vals,
         y=y_vals,
+        customdata=customdata,
         colorscale=colorscale,
-        hovertemplate="年度: %{x}<br>體位: %{y}<br>百分比: %{z:.1f}%<extra></extra>",
+        hovertemplate="%{customdata} - %{y} - %{z:.1f}%<extra></extra>",
         colorbar=dict(title="百分比 (%)", titleside="right", ticksuffix="%")
     ))
 
@@ -603,12 +609,10 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
         label_name = f"{'男生' if gender == '男' else '女生'} - {category}"
         color = COLOR_MAP.get(label_name, "#ffffff")
         
-        # 建立 hover 資訊，包含性別、體位、比例
+        # 建立 hover 資訊，包含性別、體位、比例（橫向呈現）
         gender_display = "男生" if gender == "男" else "女生"
-        hover_texts = [
-            f"{gender_display}<br>{category}<br>{pct:.1f}%"
-            for pct in sub_df["百分比"].values
-        ]
+        # customdata 為 2D list，每列為 [性別, 體位, 百分比]
+        customdata = [[gender_display, category, float(pct)] for pct in sub_df["百分比"].values]
         
         fig.add_trace(go.Scatter(
             x=sub_df["年度"], 
@@ -617,8 +621,8 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
             name=label_name, 
             line=dict(color=color, width=3), 
             marker=dict(size=8),
-            customdata=hover_texts,
-            hovertemplate="<b>%{customdata}</b><extra></extra>"
+            customdata=customdata,
+            hovertemplate="%{customdata[0]} - %{customdata[1]} - %{customdata[2]:.1f}%<extra></extra>"
         ))
     
     # 添加政策/事件標記
