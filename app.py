@@ -278,15 +278,16 @@ def create_event_block(year_label, event_type, event_text):
 def create_gender_checklist(gender_key, color):
     """生成性別選擇列表"""
     return html.Div([
-        html.Span(f"{'男生' if gender_key == 'male' else '女生'}：",
-                 style={"fontWeight": "bold", "color": color, "marginBottom": "4px", "display": "block"}),
+        # 將性別標題（男生 / 女生）的 color 固定為白色 "#ffffff"
+        html.Span(f"{'男生' if gender_key == 'male' else '女生'}：", 
+                  style={"fontWeight": "bold", "color": "#ffffff", "marginBottom": "4px", "display": "block"}),
         dcc.Checklist(
             id=f"{'male' if gender_key == 'male' else 'female'}-checklist",
             options=GENDER_OPTIONS[gender_key],
-            value=["男_適中" if gender_key == "male" else "女_適中"],
-            labelStyle={"display": "block", "marginBottom": "4px", "color": color},
+            value=["男_適中" if gender_key == 'male' else "女_適中"],
+            labelStyle={"display": "block", "marginBottom": "4px", "color": "#ffffff"},
         ),
-    ], style={"flex": 1, "marginRight": "10px" if gender_key == "male" else 0})
+    ], style={"flex": 1, "marginRight": "10px" if gender_key == 'male' else 0})
 
 
 def get_common_bar_layout(start_y, end_y):
