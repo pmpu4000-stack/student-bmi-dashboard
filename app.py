@@ -256,7 +256,7 @@ def create_event_block(year_label, event_type, event_text):
 def create_gender_checklist(gender_key, color):
     """生成性別選擇列表"""
     return html.Div([
-        html.Span(f"{'男生' if gender_key == 'male' else '女生'}：", 
+        html.Span(f"{'男生' if gender_key == 'male' else '女生'}：",
                  style={"fontWeight": "bold", "color": color, "marginBottom": "4px", "display": "block"}),
         dcc.Checklist(
             id=f"{'male' if gender_key == 'male' else 'female'}-checklist",
@@ -294,7 +294,7 @@ def create_stacked_bar_chart(gender, year_range):
     start_y, end_y = year_range
     gender_char = "男" if gender == "male" else "女"
     df_filtered = df[(df["年度"] >= start_y) & (df["年度"] <= end_y) & (df["性別"] == gender_char)]
-    
+
     fig = go.Figure()
     for cat in ["過輕", "適中", "過重", "肥胖"]:
         df_sub = df_filtered[df_filtered["體位類別"] == cat]
@@ -302,7 +302,7 @@ def create_stacked_bar_chart(gender, year_range):
             x=df_sub["年度"], y=df_sub["百分比"], name=cat,
             marker_color=GENDER_COLORS[gender][cat]
         ))
-    
+
     fig.update_layout(get_common_bar_layout(start_y, end_y))
     return fig
 
@@ -314,19 +314,19 @@ def create_heatmap(gender, year_range):
         start_y, end_y = MIN_YEAR, MAX_YEAR
     else:
         start_y, end_y = int(min(year_range)), int(max(year_range))
-        
+
     gender_char = "男" if gender == "male" else "女"
-    
+
     # 篩選資料
     df_filtered = df[(df["年度"] >= start_y) & (df["年度"] <= end_y) & (df["性別"] == gender_char)]
-    
+
     # 建立完整的年度索引
     years = list(range(start_y, end_y + 1))
-    
+
     # pivot 並確保欄位為完整的年度序列（強制轉為字串以防萬一）
     pivot_data = df_filtered.pivot(index="體位類別", columns="年度", values="百分比")
     pivot_data = pivot_data.reindex(index=["過輕", "適中", "過重", "肥胖"], columns=years)
-    
+
     # 若完全沒有資料，回傳帶提示的空圖
     if pivot_data.isnull().all().all():
         fig = go.Figure()
@@ -342,18 +342,18 @@ def create_heatmap(gender, year_range):
             font=dict(color=TEXT_COLOR)
         )
         return fig
-    
+
     x_vals = [str(y) for y in pivot_data.columns]
     y_vals = pivot_data.index.tolist()
-    
+
     # 確保 z 值為 float 矩陣，保留 NaN
     z_vals = pivot_data.values.astype(float)
-    
+
     colorscale = "Blues" if gender == "male" else "Reds"
     gender_display = "男生" if gender == "male" else "女生"
-    
+
     customdata = np.full(z_vals.shape, gender_display, dtype=object)
-    
+
     fig = go.Figure(data=go.Heatmap(
         z=z_vals,
         x=x_vals,
@@ -362,7 +362,7 @@ def create_heatmap(gender, year_range):
         customdata=customdata,
         hovertemplate="<b>%{customdata}</b><br>年度：民國 %{x} 年<br>體位：%{y}<br>百分比：%{z:.1f}%<extra></extra>"
     ))
-    
+
     fig.update_layout(
         paper_bgcolor=DARK_BG,
         plot_bgcolor=CARD_BG,
@@ -371,7 +371,7 @@ def create_heatmap(gender, year_range):
         xaxis=dict(title=dict(text="年度 (民國)", font=dict(size=16)), showgrid=False),
         yaxis=dict(title=dict(text="體位類別", font=dict(size=16)), showgrid=False)
     )
-    
+
     return fig
 
     # 將 x 軸轉為字串，並把 NaN 保留（Plotly 能處理 NaN，不會顯示格子）
@@ -471,7 +471,7 @@ app.layout = dmc.MantineProvider(
                 html.P("專題研究：探討民國 95 年至 113 年國民體位統計數據之變遷、性別差異與未來預測",
                       style={"textAlign": "center", "color": "#aaaaaa", "marginBottom": "30px"}),
             ]),
-            
+
             # 控制面板
             html.Div([
                 # 左側：性別選擇
@@ -481,9 +481,9 @@ app.layout = dmc.MantineProvider(
                         create_gender_checklist("male", MALE_COLOR),
                         create_gender_checklist("female", FEMALE_COLOR),
                     ], style={"display": "flex", "flexDirection": "row", "flex": 1}),
-                ], style={**CARD_STYLE, "flex": "0 0 200px", "padding": "15px 20px", 
+                ], style={**CARD_STYLE, "flex": "0 0 200px", "padding": "15px 20px",
                          "display": "flex", "flexDirection": "column"}),
-                
+
                 # 中間：相關資訊選擇
                 html.Div([
                     html.Label("選擇相關資訊：", style=LABEL_STYLE),
@@ -507,7 +507,7 @@ app.layout = dmc.MantineProvider(
                     ], style={"display": "flex", "flexDirection": "column", "flex": 1, "justifyContent": "center"}),
                 ], style={**CARD_STYLE, "flex": "0 0 160px", "padding": "15px 20px",
                          "display": "flex", "flexDirection": "column"}),
-                
+
                 # 右側：年份範圍選擇
                 html.Div([
                     html.Label("選擇年份範圍：", style={**LABEL_STYLE, "marginBottom": "12px"}),
@@ -541,10 +541,10 @@ app.layout = dmc.MantineProvider(
                     ], style={"display": "flex", "flexDirection": "column", "flex": 1, "justifyContent": "space-between"}),
                 ], style={**CARD_STYLE, "flex": 1, "padding": "20px 25px", "display": "flex", "flexDirection": "column"}),
             ], style={"display": "flex", "gap": "20px", "alignItems": "stretch", "marginBottom": "20px"}),
-            
+
             # 趨勢折線圖
             dcc.Graph(id="trend-line-chart"),
-            
+
             # 堆疊長條圖
             html.Div([
                 html.Div([
@@ -558,7 +558,7 @@ app.layout = dmc.MantineProvider(
                     dcc.Graph(id="stacked-bar-chart-female", config={"displayModeBar": False})
                 ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
             ], style={"display": "flex", "gap": "20px", "flexWrap": "wrap", "marginBottom": "20px"}),
-            
+
             # 熱力圖（加入與堆疊圖相同位置與風格的標題）
             html.Div([
                 html.Div([
@@ -572,7 +572,7 @@ app.layout = dmc.MantineProvider(
                     dcc.Graph(id="heatmap-female", config={"displayModeBar": False})
                 ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
             ], style={"display": "flex", "gap": "20px", "flexWrap": "wrap", "marginBottom": "20px"}),
-            
+
         ], style={"padding": "20px 40px", "backgroundColor": DARK_BG, "minHeight": "100vh"}),
     ],
 )
@@ -590,24 +590,24 @@ app.layout = dmc.MantineProvider(
 def sync_and_validate_years(start_in, end_in, slider_val):
     """同步和驗證年份輸入"""
     triggered_id = dash.ctx.triggered_id
-    
+
     if triggered_id == "year-range-slider" and slider_val:
         return min(slider_val), max(slider_val), slider_val, ""
-    
+
     if start_in is None or end_in is None:
         return start_in, end_in, dash.no_update, html.Span(
             "⚠️ 請填入完整的年份數字",
             style={"color": "#ff5252", "fontSize": "13px", "fontWeight": "bold"},
         )
-    
+
     actual_start, actual_end = min(start_in, end_in), max(start_in, end_in)
-    
+
     if not (MIN_YEAR <= actual_start <= MAX_YEAR and MIN_YEAR <= actual_end <= MAX_YEAR):
         return start_in, end_in, dash.no_update, html.Span(
             f"⚠️ 輸入超出範圍！請輸入民國 {MIN_YEAR} 年至 {MAX_YEAR} 年之間的數字",
             style={"color": "#ff5252", "fontSize": "13px", "fontWeight": "bold"},
         )
-    
+
     return actual_start, actual_end, [actual_start, actual_end], ""
 
 
@@ -622,13 +622,13 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
     show_positive = "positive" in (impact_selected or [])
     show_negative = "negative" in (impact_selected or [])
     show_prediction = "show" in (show_prediction_val or [])
-    
+
     if not year_range:
         year_range = [MIN_YEAR, MAX_YEAR]
-    
+
     filtered_df = df[(df["年度"] >= min(year_range)) & (df["年度"] <= max(year_range))]
     fig = go.Figure()
-    
+
     # 無選擇時顯示提示
     if not selected_groups:
         fig.add_annotation(text="請至少勾選一種比較組合...", xref="paper", yref="paper",
@@ -638,25 +638,25 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
                          yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, showline=False),
                          margin=dict(l=40, r=40, t=60, b=40))
         return fig
-    
+
     # 為每個選中的組合準備資料
     for group in selected_groups:
         gender, category = group.split("_")
         sub_df = filtered_df[(filtered_df["性別"] == gender) & (filtered_df["體位類別"] == category)].copy()
         label_name = f"{'男生' if gender == '男' else '女生'} - {category}"
         color = COLOR_MAP.get(label_name, "#ffffff")
-        
+
         # 建立 hover 資訊，包含性別、體位、比例（橫向呈現）
         gender_display = "男生" if gender == "男" else "女生"
         # customdata 為 2D list，每列為 [性別, 體位, 百分比]
         customdata = [[gender_display, category, float(pct)] for pct in sub_df["百分比"].values]
-        
+
         fig.add_trace(go.Scatter(
-            x=sub_df["年度"], 
-            y=sub_df["百分比"], 
+            x=sub_df["年度"],
+            y=sub_df["百分比"],
             mode="lines+markers",
-            name=label_name, 
-            line=dict(color=color, width=3), 
+            name=label_name,
+            line=dict(color=color, width=3),
             marker=dict(size=8),
             customdata=customdata,
             hovertemplate="%{customdata[0]} - %{customdata[1]} - %{customdata[2]:.1f}%<extra></extra>"
@@ -696,7 +696,7 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
     if show_prediction:
         for group in selected_groups:
             gender, category = group.split("_")
-            sub_df_all = df[(df["性別"] == gender) & (df["體位類別"] == category)].copy()
+            sub_df_all = df[(df["性別"] == gender) & (df["體位類別"] == category) & (df["年度"] >= 99)].copy()
             years = sub_df_all["年度"].values
             vals = sub_df_all["百分比"].values
             if len(years) < 2:
