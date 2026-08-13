@@ -730,7 +730,8 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
             x_pred = np.array(PRED_YEARS)
             y_pred = m * x_pred + b
             label_name = f"{'男生' if gender == '男' else '女生'} - {category} (預測)"
-            color = COLOR_MAP.get(f"{'男生' if gender == '男' else '女生'} - {category}", "#ffffff")
+            gender_key = "male" if gender == "男" else "female"
+            color = GENDER_COLORS[gender_key][category]
 
             fig.add_trace(go.Scatter(
                 x=x_pred, y=y_pred, mode='lines+markers', name=label_name,
