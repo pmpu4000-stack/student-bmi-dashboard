@@ -486,9 +486,9 @@ app.layout = dmc.MantineProvider(
                 ], style={**CARD_STYLE, "flex": "0 0 200px", "padding": "15px 20px", 
                          "display": "flex", "flexDirection": "column"}),
                 
-                # 中間：影響因素選擇
+                # 中間：相關資訊選擇
                 html.Div([
-                    html.Label("選擇影響因素：", style=LABEL_STYLE),
+                    html.Label("選擇相關資訊：", style=LABEL_STYLE),
                     html.Div([
                         dcc.Checklist(
                             id="impact-checklist",
@@ -699,7 +699,7 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
         for idx, ev in enumerate(events):
             ann_color = POLICY_COLOR if ev["type"] == "positive" else EVENT_COLOR
             # yref='paper' 並用 1.02 起始，堆疊間距 0.06
-            fig.add_annotation(x=yr, y=1.02 + idx * 0.06, xref='x', yref='paper',
+            fig.add_annotation(x=yr, y=1 + idx * 0.06, xref='x', yref='paper',
                                text=ev['text'], showarrow=False, textangle=90,
                                font=dict(color=ann_color, size=12), align='center')
 
