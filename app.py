@@ -308,25 +308,26 @@ def create_stacked_bar_chart(gender, year_range):
 
 
 def create_heatmap(gender, year_range):
-    """生成性別的熱力圖（更穩定的欄/列對齊與空資料處理）"""
+    """生成性別的熱力圖（修正欄列對齊與資料型態問題）"""
     # 安全處理 year_range
     if not year_range:
         start_y, end_y = MIN_YEAR, MAX_YEAR
     else:
         start_y, end_y = int(min(year_range)), int(max(year_range))
+        
     gender_char = "男" if gender == "male" else "女"
-
+    
     # 篩選資料
     df_filtered = df[(df["年度"] >= start_y) & (df["年度"] <= end_y) & (df["性別"] == gender_char)]
-
-    # 建立完整的年度索引（確保每年都有欄位）
+    
+    # 建立完整的年度索引
     years = list(range(start_y, end_y + 1))
-
-    # pivot 並強制 reindex（行順序固定、欄為完整年度序列）
+    
+    # pivot 並確保欄位為完整的年度序列（強制轉為字串以防萬一）
     pivot_data = df_filtered.pivot(index="體位類別", columns="年度", values="百分比")
     pivot_data = pivot_data.reindex(index=["過輕", "適中", "過重", "肥胖"], columns=years)
-
-    # 若完全沒有資料，回傳帶提示的空圖（避免空 heatmap）
+    
+    # 若完全沒有資料，回傳帶提示的空圖
     if pivot_data.isnull().all().all():
         fig = go.Figure()
         fig.add_annotation(
@@ -337,11 +338,41 @@ def create_heatmap(gender, year_range):
         fig.update_layout(
             paper_bgcolor=DARK_BG, plot_bgcolor=CARD_BG,
             margin=dict(l=80, r=40, t=40, b=40),
-            xaxis=dict(showgrid=False),
-            yaxis=dict(showgrid=False),
+            xaxis=dict(showgrid=False), yaxis=dict(showgrid=False),
             font=dict(color=TEXT_COLOR)
         )
         return fig
+    
+    x_vals = [str(y) for y in pivot_data.columns]
+    y_vals = pivot_data.index.tolist()
+    
+    # 確保 z 值為 float 矩陣，保留 NaN
+    z_vals = pivot_data.values.astype(float)
+    
+    colorscale = "Blues" if gender == "male" else "Reds"
+    gender_display = "男生" if gender == "male" else "女生"
+    
+    customdata = np.full(z_vals.shape, gender_display, dtype=object)
+    
+    fig = go.Figure(data=go.Heatmap(
+        z=z_vals,
+        x=x_vals,
+        y=y_vals,
+        colorscale=colorscale,
+        customdata=customdata,
+        hovertemplate="<b>%{customdata}</b><br>年度：民國 %{x} 年<br>體位：%{y}<br>百分比：%{z:.1f}%<extra></extra>"
+    ))
+    
+    fig.update_layout(
+        paper_bgcolor=DARK_BG,
+        plot_bgcolor=CARD_BG,
+        font=dict(color=TEXT_COLOR, size=14),
+        margin=dict(l=80, r=40, t=40, b=40),
+        xaxis=dict(title=dict(text="年度 (民國)", font=dict(size=16)), showgrid=False),
+        yaxis=dict(title=dict(text="體位類別", font=dict(size=16)), showgrid=False)
+    )
+    
+    return fig
 
     # 將 x 軸轉為字串，並把 NaN 保留（Plotly 能處理 NaN，不會顯示格子）
     x_vals = [str(y) for y in pivot_data.columns]
