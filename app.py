@@ -202,8 +202,20 @@ EVENT_COLOR = "#BF00FF"       # 亮紫色（社會事件）
 
 # 性別分類選項
 GENDER_OPTIONS = {
-    "male": [{"label": cat, "value": f"男_{cat}"} for cat in ["過輕", "適中", "過重", "肥胖"]],
-    "female": [{"label": cat, "value": f"女_{cat}"} for cat in ["過輕", "適中", "過重", "肥胖"]],
+    "male": [
+        {
+            "label": html.Span(cat, style={"color": GENDER_COLORS["male"][cat], "fontWeight": "bold"}),
+            "value": f"男_{cat}"
+        } 
+        for cat in ["過輕", "適中", "過重", "肥胖"]
+    ],
+    "female": [
+        {
+            "label": html.Span(cat, style={"color": GENDER_COLORS["female"][cat], "fontWeight": "bold"}),
+            "value": f"女_{cat}"
+        } 
+        for cat in ["過輕", "適中", "過重", "肥胖"]
+    ],
 }
 
 # 顏色映射
