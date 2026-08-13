@@ -418,40 +418,38 @@ def create_heatmap(gender, year_range):
 # 5. Dash App 初始化
 # ============================================================================
 app = dash.Dash(__name__)
-app.index_string = f"""
+app.index_string = '''
 <!DOCTYPE html>
 <html>
     <head>
-        {{%metas%}}
-        <title>{{%title%}}</title>
-        {{%favicon%}}
-        {{%css%}}
+        <title>國民小學學生歷年體位趨勢報告</title>
+        {%metas%}
+        {%css%}
         <style>
+            /* 隱藏左上角的 Loading 提示 */
+            ._dash-loading {
+                display: none !important;
+            }
             input[type=number]::-webkit-inner-spin-button,
-            input[type=number]::-webkit-outer-spin-button {{
+            input[type=number]::-webkit-outer-spin-button {
                 -webkit-appearance: none;
                 margin: 0;
-            }}
-            input[type=number] {{
+            }
+            input[type=number] {
                 -moz-appearance: textfield;
-            }}
-            .mantine-Slider-thumb:hover,
-            .mantine-Slider-thumb:focus,
-            .mantine-Slider-thumb:active {{
-                z-index: 10 !important;
-            }}
+            }
         </style>
     </head>
-    <body style="background-color: {DARK_BG}; color: {TEXT_COLOR}; font-family: sans-serif;">
-        {{%app_entry%}}
+    <body style="background-color: #1e1e1e; color: #ffffff;">
+        {%app_entry%}
         <footer>
-            {{%config%}}
-            {{%scripts%}}
-            {{%renderer%}}
+            {%config%}
+            {%scripts%}
+            {%renderer%}
         </footer>
     </body>
 </html>
-"""
+'''
 
 # ============================================================================
 # 6. Layout 設定
