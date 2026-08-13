@@ -700,8 +700,8 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
             ann_color = POLICY_COLOR if ev["type"] == "positive" else EVENT_COLOR
             # yref='paper' 並用 1.02 起始，堆疊間距 0.06
             fig.add_annotation(x=yr, y=1 + idx * 0.06, xref='x', yref='paper',
-                               text=ev['text'], showarrow=False, textangle=90,
-                               font=dict(color=ann_color, size=12), align='center')
+                   text="<br>".join(list(ev['text'])), showarrow=False, textangle=0,
+                   font=dict(color=ann_color, size=12), align='center')
 
     # 若使用者要求預測，對每個選中組合做線性回歸並加入預測線（114~116 年）
     if show_prediction:
