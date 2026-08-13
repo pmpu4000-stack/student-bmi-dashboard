@@ -573,15 +573,6 @@ app.layout = dmc.MantineProvider(
                 ], style={**CARD_STYLE, "flex": "1", "minWidth": "450px"}),
             ], style={"display": "flex", "gap": "20px", "flexWrap": "wrap", "marginBottom": "20px"}),
             
-            # 時間軸區塊
-            html.Div([
-                html.H3("政府政策與社會事件時間軸",
-                       style={"fontSize": "18px", "fontWeight": "bold", "marginBottom": "15px", "marginTop": "25px", "color": "#ffffff"}),
-                html.Div(
-                    timeline_children,
-                    style={**CARD_STYLE, "padding": "20px 25px", "marginTop": "15px"},
-                ),
-            ], style={"marginTop": "15px"}),
         ], style={"padding": "20px 40px", "backgroundColor": DARK_BG, "minHeight": "100vh"}),
     ],
 )
