@@ -664,9 +664,10 @@ def update_trend_chart(male_selected, female_selected, impact_selected, year_ran
     # 為每個選中的組合準備資料
     for group in selected_groups:
         gender, category = group.split("_")
+        gender_key = "male" if gender == "男" else "female"
         sub_df = filtered_df[(filtered_df["性別"] == gender) & (filtered_df["體位類別"] == category)].copy()
         label_name = f"{'男生' if gender == '男' else '女生'} - {category}"
-        color = COLOR_MAP.get(label_name, "#ffffff")
+        color = GENDER_COLORS[gender_key][category]
 
         # 建立 hover 資訊，包含性別、體位、比例（橫向呈現）
         gender_display = "男生" if gender == "男" else "女生"
