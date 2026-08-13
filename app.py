@@ -213,8 +213,18 @@ COLOR_MAP = {
 }
 
 GENDER_COLORS = {
-    "male": {"過輕": "#81d4fa", "適中": "#29b6f6", "過重": "#0288d1", "肥胖": "#01579b"},
-    "female": {"過輕": "#ff80ab", "適中": "#ff4081", "過重": "#f50057", "肥胖": "#c51162"},
+    "male": {
+        "過輕": "#a6cee3",  # 淺藍色
+        "適中": "#33a02c",  # 健康綠色
+        "過重": "#ff7f00",  # 警示橘色
+        "肥胖": "#e31a1c"   # 高風險紅色
+    },
+    "female": {
+        "過輕": "#a6cee3",  # 淺藍色
+        "適中": "#33a02c",  # 健康綠色
+        "過重": "#ff7f00",  # 警示橘色
+        "肥胖": "#e31a1c"   # 高風險紅色
+    }
 }
 
 # ============================================================================
@@ -349,7 +359,7 @@ def create_heatmap(gender, year_range):
     # 確保 z 值為 float 矩陣，保留 NaN
     z_vals = pivot_data.values.astype(float)
 
-    colorscale = "Blues" if gender == "male" else "Reds"
+    colorscale = "Viridis"
     gender_display = "男生" if gender == "male" else "女生"
 
     customdata = np.full(z_vals.shape, gender_display, dtype=object)
